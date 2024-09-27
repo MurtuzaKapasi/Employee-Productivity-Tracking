@@ -36,14 +36,14 @@ def track():
     return jsonify({'message': 'Data added successfully!'}), 201
 
 # Route to start recording
-@app.route('/start-recording', methods=['POST'])
-def start_recording():
-    try:
-        # Run the employee_tracking.py file
-        subprocess.Popen(['python', 'employee_tracker.py'])  # Adjust the path to your file
-        return jsonify({'message': 'Recording started successfully!'}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+# @app.route('/start-recording', methods=['POST'])
+# def start_recording():
+#     try:
+#         # Run the employee_tracking.py file
+#         subprocess.Popen(['python', 'employee_tracker.py'])  # Adjust the path to your file
+#         return jsonify({'message': 'Recording started successfully!'}), 200
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

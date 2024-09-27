@@ -5,7 +5,7 @@ from ultralytics import YOLO  # Import YOLO model for object detection
 import requests  # Import requests to send data to Flask
 
 # Load the YOLOv10 model (for both face/person detection and phone detection)
-model = YOLO("../weights/yolov10n.pt")  # Adjust path to your YOLOv10 model
+model = YOLO("E:\Programms\PBL 5\Employee-Productivity-Tracking\yolov10\weights\yolov10n.pt")  # Adjust path to your YOLOv10 model
 
 # Start video capture from the laptop's camera
 cap = cv2.VideoCapture(0)
