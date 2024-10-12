@@ -19,6 +19,7 @@
     <!-- Admin Login Form -->
     <div class="login-container">
         <h2>Admin Login</h2>
+
         <form action="/admin-login" method="POST">
             <div class="form-group">
                 <label for="admin-username">Admin Username:</label>
@@ -33,5 +34,10 @@
             </div>
         </form>
     </div>
+    {% if alert %}
+    <script >
+        alert("{{ alert }}");
+    </script>
+    {% endif %}
 </body>
 </html>

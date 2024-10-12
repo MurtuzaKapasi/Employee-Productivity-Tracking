@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="hero">
+        <div class="hero-content">
+            <h1>Welcome, {{ session['name'] }}</h1>
+            <p>View your activity logs and productivity stats below.</p>
+            <div class="hero-buttons">
+                <a href="/logout" class="btn">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <section class="stats-overview">
+            <div class="stat-card">
+                <h3>Total Absence Time</h3>
+                <p id="total-absence-time">0 hours</p>
+            </div>
+            <div class="stat-card">
+                <h3>Total Phone Usage Time</h3>
+                <p id="total-phone-usage-time">0 minutes</p>
+            </div>
+        </section>
+
+        <section class="log-container">
+            <h2>Activity Logs</h2>
+            <ul id="log-list">
+            </ul>
+        </section>
+    </div>
+
+    <script>
+        var absenceTimeElement = document.getElementById('total-absence-time');
+        var phoneUsageTimeElement = document.getElementById('total-phone-usage-time');
+        var logListElement = document.getElementById('log-list');
+
+        fetch('/get-logs')
+            .then(response => response.json())
+            .then(data => {
+                absenceTimeElement.textContent = data.total_absence_time + ' hours';
+                phoneUsageTimeElement.textContent = data.total_phone_usage_time + ' minutes';
+                data.logs.forEach(log => {
+                    var logListItem = document.createElement('li');
+                    logListItem.textContent = log.log_time + ': ' + log.event;
+                    logListElement.appendChild(logListItem);
+                });
+            });
+    </script>
+</body>
+</html>

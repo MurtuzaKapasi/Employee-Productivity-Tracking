@@ -14,7 +14,7 @@
         <h2>Admin Panel</h2>
         <ul>
             <li><a href="/admin-dashboard">Dashboard</a></li>
-            <li><a href="/add-employee">Add Employee</a></li>
+            <li><a href="/register-employee">Add Employee</a></li>
             <li><a href="/remove-employee">Remove Employee</a></li>
             <li><a href="/add-section">Create Section</a></li>
             <li><a href="/employee-list">Employee List</a></li>
@@ -22,13 +22,17 @@
         </ul>
     </nav>
 
+   {console.log(employees)}
+
     <!-- Main Content Area -->
     <div class="main-content">
         <header>
-            <h1>Welcome, Admin</h1>
+            <h1>Welcome, {{ session['name'] }}</h1>
             <p>Manage your employees and view key statistics below.</p>
         </header>
-
+        <div class="logout-btn">
+            <a href="/logout">Logout</a>
+        </div>
         <!-- Stats Overview -->
         <section class="stats-overview">
             <div class="stat-card">
@@ -70,7 +74,7 @@
                 <tbody>
                     {% for employee in employees %}
                     <tr>
-                        <td>{{ employee.id }}</td>
+                        <td>{{ employee.employee_id }}</td>
                         <td>{{ employee.name }}</td>
                         <td>{{ employee.department }}</td>
                         <td>{{ employee.position }}</td>

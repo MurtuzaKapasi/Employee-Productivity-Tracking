@@ -218,13 +218,15 @@ def hash_password(password):
     return generate_password_hash(password)
 
 def verify_password(stored_password, provided_password):
-    return check_password_hash(stored_password, provided_password)
+    # return check_password_hash(stored_password, provided_password)
+    return provided_password == stored_password
+
 
 def fetch_user_by_email(email):
     return User.query.filter_by(email=email).first()
 
 # 1. User Registration
-def register_user(name, email, password, role, department=None):
+def register_employee(name, email, password, role, department=None):
     user = fetch_user_by_email(email)
     if user:
         return "Email already exists!"
@@ -234,15 +236,14 @@ def register_user(name, email, password, role, department=None):
     new_user = User(
         user_name=name,
         email=email,
-        password=hashed_password,
+        password=password,
         role=role,
         department=department
     )
     db.session.add(new_user)
     db.session.commit()
     
-    return "User registered successfully!"
-
+    return "Employee registered successfully!"
 # 2. User Login
 def login_user(email, password):
     user = fetch_user_by_email(email)
