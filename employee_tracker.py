@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 from ultralytics import YOLO  # Import YOLO model for object detection
 import requests  # Import requests to send data to Flask
+import sys
 
 # Load the YOLOv10 model (for both face/person detection and phone detection)
 model = YOLO("E:\Programms\PBL 5\Employee-Productivity-Tracking\yolov10\weights\yolov10n.pt")  # Adjust path to your YOLOv10 model
@@ -141,7 +142,7 @@ print(f"Total phone usage time: {int(total_phone_usage_minutes)} minutes and {in
 def send_logs_to_server(total_absent_time, total_phone_usage_time):
     url = 'http://127.0.0.1:5000/track'  # Your Flask server URL
     payload = {
-        "employee_id": "12345",  # Track employee ID if needed
+        "employee_id": 12345,  # Use command-line argument for employee ID
         "total_absent_time": total_absent_time,
         "total_phone_usage_time": total_phone_usage_time
     }
@@ -150,6 +151,7 @@ def send_logs_to_server(total_absent_time, total_phone_usage_time):
         print(f"Server Response: {response.status_code}, {response.json()}")
     except Exception as e:
         print(f"Failed to send data to server: {e}")
+
 
 # Send total absence and phone usage times to the Flask server
 send_logs_to_server(total_absence_time, total_phone_usage_time)

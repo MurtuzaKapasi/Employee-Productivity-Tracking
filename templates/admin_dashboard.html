@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <h2>Admin Panel</h2>
+        <ul>
+            <li><a href="/admin-dashboard">Dashboard</a></li>
+            <li><a href="/add-employee">Add Employee</a></li>
+            <li><a href="/remove-employee">Remove Employee</a></li>
+            <li><a href="/add-section">Create Section</a></li>
+            <li><a href="/employee-list">Employee List</a></li>
+            <li><a href="/statistics">Statistics</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <header>
+            <h1>Welcome, Admin</h1>
+            <p>Manage your employees and view key statistics below.</p>
+        </header>
+
+        <!-- Stats Overview -->
+        <section class="stats-overview">
+            <div class="stat-card">
+                <h3>Total Employees</h3>
+                <p>{{ total_employees }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>Total Departments</h3>
+                <p>{{ total_departments }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>Active Employees</h3>
+                <p>{{ active_employees }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>Inactive Employees</h3>
+                <p>{{ inactive_employees }}</p>
+            </div>
+        </section>
+
+        <!-- Graphical Representation of Statistics -->
+        <section class="graph-container">
+            <h2>Productivity Trends (Department-wise)</h2>
+            <canvas id="productivityChart"></canvas>
+        </section>
+
+        <!-- Dynamic Content Area -->
+        <section class="dynamic-content">
+            <h2>Employee List (Department-wise)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Position</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in employees %}
+                    <tr>
+                        <td>{{ employee.id }}</td>
+                        <td>{{ employee.name }}</td>
+                        <td>{{ employee.department }}</td>
+                        <td>{{ employee.position }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <!-- JavaScript for Chart.js to create department-wise productivity trends -->
+    <script>
+        const ctx = document.getElementById('productivityChart').getContext('2d');
+        const productivityChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Testers', 'Interns', 'Senior Devs', 'Project Managers'], // Example departments
+                datasets: [{
+                    label: 'Productivity Hours',
+                    data: [12, 19, 3, 5], // Example data
+                    backgroundColor: ['rgba(75, 192, 192, 0.2)'],
+                    borderColor: ['rgba(75, 192, 192, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

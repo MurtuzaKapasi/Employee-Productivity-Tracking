@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        /* Inline CSS for preview purposes */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+            font-family: Arial, sans-serif;
+        }
+
+        .login-container {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .webcam-box {
+            width: 100%;
+            height: 250px;
+            background-color: #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .webcam-box video {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .manual-login {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .manual-login a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Employee Login</h2>
+        <div class="webcam-box">
+            <!-- Webcam feed will be displayed here -->
+            <video autoplay></video>
+        </div>
+        <button id="loginBtn">Login with Face ID</button>
+
+        <div class="manual-login">
+            <p>Having trouble?</p>
+            <a href="/manual-login">Login Manually</a>
+        </div>
+    </div>
+
+    <script>
+        // Start webcam feed
+        const video = document.querySelector('video');
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error("Error accessing webcam: ", err);
+                video.textContent = "Webcam not available";
+            });
+
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            // Placeholder action for the biometric login
+            alert('Face ID login triggered!');
+        });
+    </script>
+</body>
+</html>
