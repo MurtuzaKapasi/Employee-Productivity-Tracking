@@ -1,6 +1,7 @@
 import os
 
 class Config:
+    SECRET_KEY = 'mysecretkey'
     SQLALCHEMY_DATABASE_URI = 'postgresql://flask_user:Emp123@localhost/employee_tracking'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
