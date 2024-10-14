@@ -55,7 +55,7 @@ def init_routes(app):
         if not user or not verify_password(user.password, password):
             return "Invalid credentials!", 401
 
-        session['user_id'] = user.id
+        session['employee_id'] = user.id
         session['role'] = user.role
         session['name'] = user.user_name
         session['email'] = user.email
@@ -94,10 +94,10 @@ def init_routes(app):
 
     @app.route('/logout')
     def logout():
-        user_id = session.get('user_id')
+        employee_id = session.get('employee_id')
         admin_id = session.get('admin_id')
-        if user_id:
-            log_user_logout(user_id)
+        if employee_id:
+            log_user_logout(employee_id)
             session.clear()
         elif admin_id:
             log_user_logout(admin_id)
@@ -121,12 +121,52 @@ def init_routes(app):
     
     @app.route('/employee-dashboard')
     def employee_dashboard():
-        if 'user_id' in session:
+        if 'employee_id' in session:
             return render_template('employee_dashboard.html')
         else:
             return render_template('not_logged.html')
    
-   
+# EMPLOYEE dashboard routes---------------------------------
+
+    @app.route('/get-logs', methods=['GET'])
+    def get_logs():
+        # Query the employee tracking table for logs and stats
+        employee_id = session.get('employee_id')  # Assuming the session has the employee id
+        logs = EmployeeTracking.query.filter_by(employee_id=employee_id).all()
+
+        total_absence_time = sum(log.idle_time_hours for log in logs if log.idle_time_hours is not None)
+        total_phone_usage_time = sum(log.mobile_usage_minutes for log in logs)
+        total_working_hours = sum(log.total_hours_worked for log in logs)
+
+        # Format the logs into a dictionary
+        log_data = [{'log_time': log.log_time, 'event': log.event} for log in logs]
+
+        return jsonify({
+            'total_absence_time': total_absence_time,
+            'total_phone_usage_time': total_phone_usage_time,
+            'total_working_hours': total_working_hours,
+            'logs': log_data
+        })
+
+    @app.route('/submit-meeting', methods=['POST'])
+    def submit_meeting():
+        meeting_with = request.form['meeting_with']
+        meeting_desc = request.form['meeting_desc']
+        
+        # Assuming you have the employee ID in session
+        employee_id = session.get('employee_id')
+
+        # Save meeting info to the employee tracking table
+        new_meeting = EmployeeTracking(
+            employee_id=employee_id,
+            meeting_info=f"With: {meeting_with}, Desc: {meeting_desc}",
+            meeting_hours=0  # Default meeting hours to 0, can be updated later
+        )
+        db.session.add(new_meeting)
+        db.session.commit()
+
+        return redirect(url_for('employee_dashboard'))
+    
     # Route to insert data into database------------------------
     @app.route('/track', methods=['POST'])
     def track():
@@ -151,12 +191,23 @@ def init_routes(app):
     @app.route('/start-recording', methods=['POST'])
     def start_recording():
         try:
-            # Run the employee_tracking.py file as a subprocess
-            subprocess.Popen(['python', 'employee_tracker.py'], shell=True)  # Adjust path if necessary
+            # Save employee login time and start recording
+            employee_id = session.get('employee_id')  
+            login_time = datetime.now().strftime('%H:%M:%S')
+            name = session.get('name')
+
+            # Save login time in the EmployeeTracking table
+            track_entry = EmployeeTracking(employee_id=employee_id, name=name, login_time=login_time)
+            db.session.add(track_entry)
+            db.session.commit()
+
+            # Run the employee tracking script in the background
+            subprocess.Popen(['python', 'employee_tracker.py'], shell=True)
+            
             return jsonify({'message': 'Recording started successfully!'}), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-
+        
     # Route to get tracking data for a specific employee
     @app.route('/tracking-data/<employee_id>', methods=['GET'])
     def get_tracking_data(employee_id):
@@ -171,3 +222,105 @@ def init_routes(app):
         else:
             return jsonify({'error': 'No tracking data found for this employee.'}), 404
 
+    @app.route('/take-lunch', methods=['POST'])
+    def take_lunch():
+        try:
+            employee_id = session.get('employee_id')
+            confirmation = request.form.get('confirmation')  # Confirmation response from the popup
+
+            if confirmation == 'pause':
+                # Save the start of the lunch break in the database
+                track_entry = EmployeeTracking.query.filter_by(employee_id=employee_id).order_by(EmployeeTracking.id.desc()).first()
+                track_entry.lunch_start_time = datetime.now().strftime('%H:%M:%S')
+                db.session.commit()
+
+                return jsonify({'message': 'Lunch break started. Recording paused.'}), 200
+
+            elif confirmation == 'resume':
+                # Save the end of the lunch break and resume recording
+                track_entry = EmployeeTracking.query.filter_by(employee_id=employee_id).order_by(EmployeeTracking.id.desc()).first()
+                track_entry.lunch_end_time = datetime.now().strftime('%H:%M:%S')
+
+                # Calculate total lunch duration
+                lunch_duration = (datetime.strptime(track_entry.lunch_end_time, '%H:%M:%S') -
+                                datetime.strptime(track_entry.lunch_start_time, '%H:%M:%S')).total_seconds() / 3600
+                track_entry.lunch_duration = lunch_duration
+                db.session.commit()
+
+                return jsonify({'message': 'Lunch break finished. Recording resumed.'}), 200
+            else:
+                return jsonify({'error': 'Invalid confirmation response.'}), 400
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+            
+    @app.route('/start-meeting', methods=['POST'])
+    def start_meeting():
+        try:
+            employee_id = session.get('employee_id')
+            meeting_info = request.form['meeting_info']  # Expecting whom and description
+            track_entry = EmployeeTracking.query.filter_by(employee_id=employee_id).order_by(EmployeeTracking.id.desc()).first()
+
+            # Save meeting start time and info in the database
+            track_entry.meeting_start_time = datetime.now().strftime('%H:%M:%S')
+            track_entry.meeting_info = meeting_info
+            db.session.commit()
+
+            # Optionally, pause the recording during the meeting
+            track_entry.recording_paused = True
+            db.session.commit()
+
+            return jsonify({'message': 'Meeting started. Recording paused.'}), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/stop-meeting', methods=['POST'])
+    def stop_meeting():
+        try:
+            employee_id = session.get('employee_id')
+            track_entry = EmployeeTracking.query.filter_by(employee_id=employee_id).order_by(EmployeeTracking.id.desc()).first()
+
+            # Save meeting end time
+            track_entry.meeting_end_time = datetime.now().strftime('%H:%M:%S')
+
+            # Calculate meeting duration
+            meeting_duration = (datetime.strptime(track_entry.meeting_end_time, '%H:%M:%S') -
+                                datetime.strptime(track_entry.meeting_start_time, '%H:%M:%S')).total_seconds() / 3600
+            track_entry.meeting_duration = meeting_duration
+            db.session.commit()
+
+            # Resume recording after meeting ends
+            track_entry.recording_paused = False
+            db.session.commit()
+
+            return jsonify({'message': 'Meeting ended. Recording resumed.'}), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/stop-recording', methods=['POST'])
+    def stop_recording():
+        try:
+            # Get employee_id from session
+            employee_id = session.get('employee_id')  # Ensure you set this when the user logs in
+            if not employee_id:
+                return jsonify({'message': 'User not logged in'}), 401
+
+            # Get the current time as end_time
+            end_time = datetime.now()
+
+            # Fetch the employee record based on the employee_id
+            employee_record = EmployeeTracking.query.filter_by(employee_id=employee_id).first()
+
+            if not employee_record:
+                return jsonify({'message': 'Employee not found'}), 404
+            
+            # Stop recording: update end_time and calculate total working hours
+            employee_record.end_time = end_time
+            total_working_hours = (end_time - employee_record.start_time).total_seconds() / 3600.0
+            employee_record.total_working_hours = total_working_hours
+            db.session.commit()  # Save changes to the database
+
+            return jsonify({'message': 'Recording stopped successfully', 'total_working_hours': total_working_hours}), 200
+
+        except Exception as e:
+            return jsonify({'message': str(e)}), 500  # Internal Server Error
