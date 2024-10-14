@@ -1,8 +1,11 @@
-from flask import Flask, request, jsonify
+from flask import Flask, redirect, request, jsonify, render_template, url_for
 from config import Config
-from models import db, EmployeeTracking
+from models import LoginLog, User, db, EmployeeTracking
 from datetime import datetime
-import subprocess  # Import subprocess to run the employee_tracking.py
+from flask import session
+from werkzeug.security import generate_password_hash, check_password_hash
+from routes import init_routes
+
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -10,40 +13,29 @@ app.config.from_object(Config)
 # Initialize the database with Flask
 db.init_app(app)
 
-# Root route
-@app.route('/')
-def home():
-    return "Welcome to the Employee Tracking System!"
+# Initialize routes
+init_routes(app)
 
-# Route to track employee absence and phone usage
-@app.route('/track', methods=['POST'])
-def track():
-    data = request.json
-    employee_id = data.get('employee_id')
-    total_absent_time = data.get('total_absent_time')
-    total_phone_usage_time = data.get('total_phone_usage_time')
 
-    # Create a new tracking record in the database
-    track_entry = EmployeeTracking(
-        employee_id=employee_id,
-        total_absent_time=total_absent_time,
-        total_phone_usage_time=total_phone_usage_time,
-    )
 
-    db.session.add(track_entry)
-    db.session.commit()
+# @app.route('/remove-employee', methods=['GET', 'POST'])
+# def remove_employee():
+#     if request.method == 'POST':
+#         # Code to remove employee from database
+#         return redirect('/admin-dashboard')
+#     return render_template('remove_employee.html')
 
-    return jsonify({'message': 'Data added successfully!'}), 201
+# @app.route('/add-section', methods=['GET', 'POST'])
+# def add_section():
+#     if request.method == 'POST':
+#         # Code to create a new department/section in the database
+#         return redirect('/admin-dashboard')
+#     return render_template('add_section.html')
 
-# Route to start recording
-@app.route('/start-recording', methods=['POST'])
-def start_recording():
-    try:
-        # Run the employee_tracking.py file
-        subprocess.Popen(['python', 'employee_tracker.py'])  # Adjust the path to your file
-        return jsonify({'message': 'Recording started successfully!'}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+# @app.route('/statistics')
+# def statistics():
+#     # Code to fetch and display statistics, possibly from Power BI
+#     return render_template('statistics.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

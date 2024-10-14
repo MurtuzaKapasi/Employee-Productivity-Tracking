@@ -166,8 +166,10 @@ from datetime import datetime
 import face_recognition  # Import face_recognition for face verification
 from ultralytics import YOLO  # Import YOLO model for object detection
 
+
 # Load the YOLOv10 model (for phone detection)
 model = YOLO("../weights/yolov10n.pt")  # Adjust path to your YOLOv10 model
+
 
 # Start video capture from the laptop's camera
 cap = cv2.VideoCapture(0)
@@ -317,4 +319,5 @@ print("Employee was using phone at:")
 for log in phone_usage_log:
     print(log)
 print(f"Total phone usage time: {int(total_phone_usage_minutes)} minutes and {int(total_phone_usage_seconds)} seconds")
+
 
