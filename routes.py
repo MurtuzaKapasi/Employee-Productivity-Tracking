@@ -21,12 +21,24 @@ def init_routes(app):
         password = request.form['password']
         role = request.form['role']
         department = request.form.get('department')
-
-        # hashed_password = generate_password_hash(password)
-
+        position = request.form.get('position')
+        profile_picture = request.files['profile_picture']
+        
         try:
-        # Create a new User object and add it to the database
-            new_employee = User(user_name=name, email=email, password=password, role=role, department=department)
+            # Convert image to bytes
+            image_bytes = profile_picture.read()
+            
+            # Create a new User object
+            new_employee = User(
+                user_name=name,
+                email=email,
+                password=password,  # Consider hashing this
+                role=role,
+                department=department,
+                position=position,
+                profile_picture=image_bytes  # Assuming you have a column for this
+            )
+
             db.session.add(new_employee)
             db.session.commit()
 
@@ -34,10 +46,10 @@ def init_routes(app):
             return redirect(url_for('admin_dashboard'))
 
         except Exception as e:
-            db.session.rollback()  # Roll back any changes if something goes wrong
+            db.session.rollback()
             flash(f"Error: {str(e)}", 'danger')
             return render_template('register_employee.html'), 400
-        
+
     @app.route('/login')
     def login():
         return render_template('login.html')
