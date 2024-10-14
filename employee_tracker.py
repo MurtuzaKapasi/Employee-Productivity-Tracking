@@ -167,6 +167,7 @@ import face_recognition
 from ultralytics import YOLO
 from flask_sqlalchemy import SQLAlchemy
 from app import db, app  # Import db and app from your Flask app
+import numpy as np
 
 # Import models
 from models import BreakLog, User
@@ -186,13 +187,13 @@ break_start_time = None
 phone_usage_start_time = None
 total_phone_usage_time = 0
 
-# Load the reference image of the employee (for face recognition)
-reference_image = face_recognition.load_image_file("Sanket.jpg")  # Replace with the correct image path
-reference_encoding = face_recognition.face_encodings(reference_image)[0]
+# # Load the reference image of the employee (for face recognition)
+# reference_image = face_recognition.load_image_file("Sanket.jpg")  # Replace with the correct image path
+# reference_encoding = face_recognition.face_encodings(reference_image)[0]
 
 with app.app_context():
     # Example: Fetch an employee based on a unique attribute (e.g., email)
-    employee_email = "sak@gmail.com"  
+    employee_email = "emp1@gmail.com"  
 
     # Fetch the employee from the database
     employee = User.query.filter_by(email=employee_email).first()
@@ -200,6 +201,12 @@ with app.app_context():
     if employee:
         employee_id = employee.id  # Get the employee ID dynamically
         print(f"Employee found: {employee.user_name} with ID: {employee_id}")
+        
+        # Convert the binary image data to numpy array
+        profile_picture = np.frombuffer(employee.profile_picture, np.uint8)
+        reference_image = cv2.imdecode(profile_picture, cv2.IMREAD_COLOR)
+        reference_encoding = face_recognition.face_encodings(reference_image)[0]
+        
     else:
         print(f"No employee found with email {employee_email}")
     
@@ -234,7 +241,7 @@ def check_presence(frame, current_time):
                     # Add BreakLog entry to the database
                     with app.app_context():
                         new_break = BreakLog(
-                            employee_id=User.query.filter_by(email=employee_email).first().id,  # Employee ID
+                            employee_id=employee_id,          # Employee ID
                             start_time=absence_start_time,  # Absence start time
                             end_time=break_end_time,        # Break end time
                             break_time=break_duration       # Duration of break in seconds
