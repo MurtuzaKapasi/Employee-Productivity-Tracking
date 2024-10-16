@@ -1,8 +1,8 @@
 import base64
 import subprocess
 from flask import flash, request, render_template, session, redirect, url_for, jsonify
-from utilities import fetch_active_employees_count, fetch_departments_count, fetch_employees, verify_password, fetch_user_by_email, hash_password, log_user_login, log_user_logout,register_employee,log_start_recording
-from models import EmployeeTracking, User,db, LoginLog,RecordingLog
+from utilities import fetch_active_employees_count, fetch_departments_count, fetch_employees, verify_password, fetch_user_by_email, hash_password, log_user_login, log_user_logout,register_employee
+from models import EmployeeTracking, User,db, LoginLog, MeetingLog, BreakLog, LunchBreakLog, RecordingLog
 from datetime import datetime
 
 
@@ -337,26 +337,24 @@ def init_routes(app):
     def stop_recording():
         try:
             # Get employee_id from session
-            employee_id = session.get('employee_id')  # Ensure you set this when the user logs in
+            employee_id = session.get('employee_id')
             if not employee_id:
                 return jsonify({'message': 'User not logged in'}), 401
 
-            # Get the current time as end_time
-            end_time = datetime.now()
+            # Check if there's an active recording log for this employee
+            recording_log = RecordingLog.query.filter_by(employee_id=employee_id, is_active=True).first()
 
-            # Fetch the employee record based on the employee_id
-            employee_record = EmployeeTracking.query.filter_by(employee_id=employee_id).first()
+            if not recording_log:
+                return jsonify({'message': 'No active recording found for employee'}), 404
 
-            if not employee_record:
-                return jsonify({'message': 'Employee not found'}), 404
-            
-            # Stop recording: update end_time and calculate total working hours
-            employee_record.end_time = end_time
-            total_working_hours = (end_time - employee_record.start_time).total_seconds() / 3600.0
-            employee_record.total_working_hours = total_working_hours
-            db.session.commit()  # Save changes to the database
-
-            return jsonify({'message': 'Recording stopped successfully', 'total_working_hours': total_working_hours}), 200
+            # Since the employee_tracker.py handles the stop logic, we just confirm it's updated.
+            return jsonify({
+                'message': 'Recording stopped successfully',
+                'total_capture_time': recording_log.total_capture_time,
+                'mobile_usage_time': recording_log.mobile_usage_time
+            }), 200
 
         except Exception as e:
-            return jsonify({'message': str(e)}), 500  # Internal Server Error
+            return jsonify({'message': str(e)}), 500
+
+

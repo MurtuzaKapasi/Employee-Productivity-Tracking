@@ -165,14 +165,10 @@ import time
 from datetime import datetime
 import face_recognition
 from ultralytics import YOLO
-from flask_sqlalchemy import SQLAlchemy
-from app import db, app  # Import db and app from your Flask app
 import numpy as np
-from flask import session
 import sys
-
-# Import models
-from models import BreakLog, User
+from app import db, app  # Import db and app from your Flask app
+from models import BreakLog, User, RecordingLog
 
 # Load the YOLOv10 model (for phone detection)
 model = YOLO("../weights/yolov10n.pt")  # Adjust path to your YOLOv10 model
@@ -188,7 +184,6 @@ if len(sys.argv) < 3:
 employee_id = sys.argv[1]
 employee_email = sys.argv[2]
 
-
 # Variables for tracking absence and breaks
 absence_start_time = None
 total_absence_time = 0
@@ -198,93 +193,64 @@ break_start_time = None
 phone_usage_start_time = None
 total_phone_usage_time = 0
 
-# # Load the reference image of the employee (for face recognition)
-# reference_image = face_recognition.load_image_file("Sanket.jpg")  # Replace with the correct image path
-# reference_encoding = face_recognition.face_encodings(reference_image)[0]
-
+# Load the reference image of the employee (for face recognition)
 with app.app_context():
-    # Example: Fetch an employee based on a unique attribute (e.g., email)
-
-    # Fetch the employee from the database
     employee = User.query.filter_by(email=employee_email).first()
     
     if employee:
-        employee_id = employee.id  # Get the employee ID dynamically
+        employee_id = employee.id
         print(f"Employee found: {employee.user_name} with ID: {employee_id}")
         
-        # Convert the binary image data to numpy array
         profile_picture = np.frombuffer(employee.profile_picture, np.uint8)
         reference_image = cv2.imdecode(profile_picture, cv2.IMREAD_COLOR)
         reference_encoding = face_recognition.face_encodings(reference_image)[0]
-        
     else:
         print(f"No employee found with email {employee_email}")
-    
 
-# Track the last time presence was checked
+# Track start recording details without committing immediately
+start_recording_time = datetime.now()
+
 last_check_time = time.time()
 
 # Function to check user presence and log breaks
 def check_presence(frame, current_time):
     global absence_start_time, break_start_time, total_absence_time
 
-    # Find all face locations and encodings in the current frame
     face_locations = face_recognition.face_locations(frame)
     face_encodings = face_recognition.face_encodings(frame, face_locations)
 
     user_found = False
-
-    # Loop through all detected faces
     for face_encoding in face_encodings:
-        # Check if the detected face matches the reference face (employee)
         matches = face_recognition.compare_faces([reference_encoding], face_encoding)
         if matches[0]:
             user_found = True
             if absence_start_time:
-                # Calculate absence duration
                 absence_duration = (current_time - absence_start_time).total_seconds()
                 if absence_duration > 15:
-                    # If absent for more than 15 seconds, log the break
                     break_duration = absence_duration
                     break_end_time = current_time
-
-                    # Add BreakLog entry to the database
                     with app.app_context():
                         new_break = BreakLog(
-                            employee_id=employee_id,          # Employee ID
-                            start_time=absence_start_time,  # Absence start time
-                            end_time=break_end_time,        # Break end time
-                            break_time=break_duration       # Duration of break in seconds
+                            employee_id=employee_id,
+                            start_time=absence_start_time,
+                            end_time=break_end_time,
+                            break_time=break_duration
                         )
-                        
-                        # Add the new break log to the database
                         db.session.add(new_break)
                         db.session.commit()
-
-                    print(f"Break Logged for employee {employee_id} at {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
-                    print(f"Break duration: {break_duration} seconds")
-
-                # Reset absence_start_time after logging the break
-                absence_start_time = None
-            
-            # Highlight the user with a green rectangle when present
+                    absence_start_time = None
             for (top, right, bottom, left) in face_locations:
                 cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
                 cv2.putText(frame, "Present", (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-    # If no matching face is found (user absent)
-    if not user_found:
-        if absence_start_time is None:
-            # Set the absence start time if not already set
-            absence_start_time = current_time
-            print(f"Employee {employee_id} absent at {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
-
+    if not user_found and absence_start_time is None:
+        absence_start_time = current_time
+        print(f"Employee {employee_id} absent at {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
 # Function to detect phone usage
 def detect_phone(frame, current_time):
     global phone_usage_start_time, total_phone_usage_time
     results = model.predict(source=frame, conf=0.25)
-
     phones_detected = []
 
     for result in results:
@@ -292,10 +258,8 @@ def detect_phone(frame, current_time):
             cls = int(box.cls[0])
             conf = box.conf[0]
             xyxy = box.xyxy[0]
-
             if cls == 67:
                 phones_detected.append((cls, conf, xyxy))
-
             x1, y1, x2, y2 = map(int, xyxy)
             if cls == 67:
                 color = (0, 0, 255)
@@ -314,10 +278,6 @@ def detect_phone(frame, current_time):
             phone_usage_start_time = None
             print(f"Phone usage ended at {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
-# Main loop for tracking
-start_time = time.time()
-duration = 120  # 2 minutes
-
 while True:
     current_time = datetime.now()
     ret, frame = cap.read()
@@ -330,14 +290,30 @@ while True:
         last_check_time = time.time()
 
     detect_phone(frame, current_time)
-
     cv2.imshow('Employee Tracking', frame)
 
-    if time.time() - start_time > duration or cv2.waitKey(1) & 0xFF == ord('q'):
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
 cap.release()
 cv2.destroyAllWindows()
 
-# Print total phone usage time
+# Commit the recording log at the end of recording
+with app.app_context():
+    end_recording_time = datetime.now()
+    total_capture_time = (end_recording_time - start_recording_time).total_seconds() / 60.0  # Total time in minutes
+    
+    recording_log = RecordingLog(
+        employee_id=employee_id,
+        start_recording_time=start_recording_time,
+        end_recording_time=end_recording_time,
+        total_capture_time=total_capture_time,
+        mobile_usage_time=total_phone_usage_time,
+        is_active=False
+    )
+    db.session.add(recording_log)
+    db.session.commit()
+
 print(f"Total phone usage time: {total_phone_usage_time} seconds")
+
+
