@@ -1,8 +1,8 @@
 import base64
 import subprocess
 from flask import flash, request, render_template, session, redirect, url_for, jsonify
-from utilities import fetch_active_employees_count, fetch_departments_count, fetch_employees, verify_password, fetch_user_by_email, hash_password, log_user_login, log_user_logout,register_employee
-from models import EmployeeTracking, User,db, LoginLog
+from utilities import fetch_active_employees_count, fetch_departments_count, fetch_employees, verify_password, fetch_user_by_email, hash_password, log_user_login, log_user_logout,register_employee,log_start_recording
+from models import EmployeeTracking, User,db, LoginLog,RecordingLog
 from datetime import datetime
 
 
@@ -84,10 +84,6 @@ def init_routes(app):
         if not user or not verify_password(user.password, password):
             return "Invalid credentials!", 401
         
-        print(user.id)
-        print(user.role)
-        print(user.user_name)
-        print(user.email)
         
         session['employee_id'] = user.id
         session['role'] = user.role
@@ -222,34 +218,32 @@ def init_routes(app):
         return jsonify({'message': 'Data added successfully!'}), 201
 
     # Route to start recording
+
+
     @app.route('/start-recording', methods=['POST'])
     def start_recording():
         try:
-            # Save employee login time and start recording
+            # Get employee details from session
             employee_id = session.get('employee_id')  
-            login_time = datetime.now().strftime('%H:%M:%S')
-            name = session.get('name')
             employee_email = session.get('email')
 
-            print(f"Employee ID: {employee_id}")    
-            print(f"Login Time: {login_time}")
-            print(f"Name: {name}")
-            print(f"email: {employee_email}")
+            if not employee_id or not employee_email:
+                return jsonify({'error': 'Employee ID or email not found in session.'}), 400
 
-            # # Save login time in the EmployeeTracking table
-            # track_entry = EmployeeTracking(employee_id=employee_id, name=name, login_time=login_time)
-
-            # db.session.add(track_entry)
-            # db.session.commit()
+            # Log start recording time
+            log_start_recording(employee_id)
 
             # Run the employee tracking script in the background
             subprocess.Popen(['python', 'employee_tracker.py', str(employee_id), employee_email], shell=True)
-            # subprocess.Popen(['python', 'checker2.py'], shell=True)
-            
+
             return jsonify({'message': 'Recording started successfully!'}), 200
+
         except Exception as e:
+            # Print error to console for debugging
+            print(f"Error occurred: {str(e)}")
             return jsonify({'error': str(e)}), 500
         
+
     # Route to get tracking data for a specific employee
     @app.route('/tracking-data/<employee_id>', methods=['GET'])
     def get_tracking_data(employee_id):

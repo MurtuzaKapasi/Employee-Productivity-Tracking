@@ -1,5 +1,5 @@
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import EmployeeTracking, User, LoginLog
+from models import EmployeeTracking, RecordingLog, User, LoginLog
 from datetime import datetime
 from flask import session
 from models import db
@@ -280,3 +280,15 @@ def fetch_departments_count():
 
 def fetch_active_employees_count():
     return LoginLog.query.filter_by(status='active').count()
+
+def log_start_recording(employee_id):
+    emp = User.query.filter_by(id=employee_id).first()
+    login_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Use a proper datetime format
+    # Create a new log entry
+    track_entry = RecordingLog(
+        employee_id=employee_id,
+        start_recording_time=login_time,
+        is_active=True
+    )
+    db.session.add(track_entry)
+    db.session.commit()
