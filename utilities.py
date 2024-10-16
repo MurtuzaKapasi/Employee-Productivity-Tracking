@@ -292,3 +292,23 @@ def log_start_recording(employee_id):
     )
     db.session.add(track_entry)
     db.session.commit()
+    
+    session['recording_log_id'] = track_entry.id
+    
+def log_stop_recording(phone_usage_time):
+    recording_log_id = session.get('recording_log_id')
+    if recording_log_id:
+            recording_log = RecordingLog.query.get(recording_log_id)
+            if recording_log:
+                end_time = datetime.now()
+                total_capture_time = (end_time - recording_log.start_recording_time).total_seconds() / 60.0
+
+                recording_log.end_recording_time = end_time
+                recording_log.total_capture_time = total_capture_time
+                recording_log.mobile_usage_time = phone_usage_time
+                recording_log.is_active = False
+                db.session.commit()
+                
+                session.pop('recording_log_id', None)  # Remove recording ID from session
+            else:
+                print("No active recording log found to stop.")

@@ -1,9 +1,15 @@
 import base64
+import platform
 import subprocess
+import traceback
 from flask import flash, request, render_template, session, redirect, url_for, jsonify
-from utilities import fetch_active_employees_count, fetch_departments_count, fetch_employees, verify_password, fetch_user_by_email, hash_password, log_user_login, log_user_logout,register_employee
+import psutil
+from utilities import fetch_active_employees_count, fetch_departments_count, fetch_employees, log_start_recording, log_stop_recording, verify_password, fetch_user_by_email, hash_password, log_user_login, log_user_logout,register_employee
 from models import EmployeeTracking, User,db, LoginLog, MeetingLog, BreakLog, LunchBreakLog, RecordingLog
 from datetime import datetime
+import os
+import signal
+
 
 
 def init_routes(app):
@@ -234,7 +240,8 @@ def init_routes(app):
             log_start_recording(employee_id)
 
             # Run the employee tracking script in the background
-            subprocess.Popen(['python', 'employee_tracker.py', str(employee_id), employee_email], shell=True)
+            process = subprocess.Popen(['python', 'employee_tracker.py', str(employee_id), employee_email], shell=True)
+            session['tracker_pid'] = process.pid  # Save the process ID in session
 
             return jsonify({'message': 'Recording started successfully!'}), 200
 
@@ -333,28 +340,56 @@ def init_routes(app):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
+    import psutil
+
     @app.route('/stop-recording', methods=['POST'])
     def stop_recording():
         try:
-            # Get employee_id from session
+            # Extract phone usage time from request
+            data = request.get_json()
+            print('Data:', data)
+            phone_usage_time = data.get('phone_usage_time')
+            print('Phone usage time:', phone_usage_time)
+
+            # Get the process ID from session
+            tracker_pid = session.get('tracker_pid')
+            
+            if not tracker_pid:
+                return jsonify({'error': 'No recording process found.'}), 400
+
+            # Terminate the process and all its children
+            if platform.system() == 'Windows' or platform.system() == 'Linux' or platform.system() == 'Darwin':
+                try:
+                    print('Terminating process:', tracker_pid)
+                    # Get the parent process
+                    parent_process = psutil.Process(tracker_pid)
+                    
+                    # Terminate all child processes
+                    children = parent_process.children(recursive=True)
+                    for child in children:
+                        child.terminate()  # or child.kill() for force kill
+                    parent_process.terminate()  # or parent_process.kill() for force kill
+                    
+                    # Wait for processes to terminate
+                    for child in children:
+                        child.wait()
+                    parent_process.wait()
+                    
+                except psutil.NoSuchProcess:
+                    return jsonify({'error': 'Process not found.'}), 400
+
+            # Clear the tracker_pid from session
+            session.pop('tracker_pid', None)
+
+            # Log the stop of recording and update the tracking data
             employee_id = session.get('employee_id')
-            if not employee_id:
-                return jsonify({'message': 'User not logged in'}), 401
-
-            # Check if there's an active recording log for this employee
-            recording_log = RecordingLog.query.filter_by(employee_id=employee_id, is_active=True).first()
-
-            if not recording_log:
-                return jsonify({'message': 'No active recording found for employee'}), 404
-
-            # Since the employee_tracker.py handles the stop logic, we just confirm it's updated.
-            return jsonify({
-                'message': 'Recording stopped successfully',
-                'total_capture_time': recording_log.total_capture_time,
-                'mobile_usage_time': recording_log.mobile_usage_time
-            }), 200
+            if employee_id:
+                log_stop_recording(phone_usage_time)
+                return jsonify({'message': 'Recording stopped successfully!'}), 200
+            else:
+                return jsonify({'error': 'Employee not found in session'}), 400
 
         except Exception as e:
-            return jsonify({'message': str(e)}), 500
-
-
+            print(f"Error occurred in stop-recording: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+    

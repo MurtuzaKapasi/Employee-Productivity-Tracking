@@ -169,6 +169,7 @@ import numpy as np
 import sys
 from app import db, app  # Import db and app from your Flask app
 from models import BreakLog, User, RecordingLog
+import requests
 
 # Load the YOLOv10 model (for phone detection)
 model = YOLO("../weights/yolov10n.pt")  # Adjust path to your YOLOv10 model
@@ -298,22 +299,22 @@ while True:
 cap.release()
 cv2.destroyAllWindows()
 
-# Commit the recording log at the end of recording
-with app.app_context():
-    end_recording_time = datetime.now()
-    total_capture_time = (end_recording_time - start_recording_time).total_seconds() / 60.0  # Total time in minutes
-    
-    recording_log = RecordingLog(
-        employee_id=employee_id,
-        start_recording_time=start_recording_time,
-        end_recording_time=end_recording_time,
-        total_capture_time=total_capture_time,
-        mobile_usage_time=total_phone_usage_time,
-        is_active=False
+# Send phone usage time to the stop-recording route
+try:
+    print('Sending phone usage time to the server...')  
+    response = requests.post(
+        "http://127.0.0.1:5000/stop-recording",  
+        json={'employee_id': employee_id, 'phone_usage_time': total_phone_usage_time}
     )
-    db.session.add(recording_log)
-    db.session.commit()
+    print(f"Sent phone usage time: {total_phone_usage_time} seconds")  
 
-print(f"Total phone usage time: {total_phone_usage_time} seconds")
+    # CHANGED: Debugging network issues with response status code
+    if response.status_code != 200:
+        print(f"Failed with status code: {response.status_code}, response: {response.text}")
+
+except requests.exceptions.RequestException as e:
+    print(f"Failed to send phone usage time: {e}")
 
 
+# def get_phone_usage_time():
+#     return total_phone_usage_time
