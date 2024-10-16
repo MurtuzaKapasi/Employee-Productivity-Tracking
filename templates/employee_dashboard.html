@@ -49,93 +49,178 @@
 
         .main-content {
             margin: 20px auto;
-            max-width: 900px;
+            width: 90%;
         }
 
-        .stat-card {
+        .card-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .card {
             background: #fff;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
             transition: transform 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
+            flex: 2;
+            max-width: 300px;
+            min-width: 250px;
+            display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
         }
 
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card img {
+            width: 100%;
+            height: 200px;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .timer {
+            font-size: 1.5em;
+            margin-top: 10px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .card {
+                max-width: calc(50% - 20px);
+                /* Two cards in a row on medium screens */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                max-width: calc(100% - 20px);
+                /* One card in a row on small screens */
+            }
+        }
+
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+
         .modal-content {
-            background: white;
+            background-color: #fefefe;
+            margin: 15% auto;
             padding: 20px;
-            border-radius: 10px;
+            border: 1px solid #888;
             width: 400px;
+            height: fit-content;
+            border-radius: 15px;
             text-align: center;
+            box-sizing: border-box;
         }
 
         .close-modal {
             float: right;
             cursor: pointer;
         }
+
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        input[type="text"],
+        textarea {
+            width: calc(100% - 22px);
+            /* Adjust width to account for padding and border */
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        textarea {
+            resize: vertical;
+            height: 100px;
+        }
     </style>
 </head>
 
 <body>
     <div class="hero">
-        <div class="hero-buttons" style="position: absolute; right: 20px; top: 20px;">
+        <div class="hero-buttons" style="position:absolute; right:20px; top:20px;">
             <a href="/logout" class="btn">Logout</a>
         </div>
-        <div class="hero-content" style="display: flex; justify-content: center; align-items: center; height: 100%;">
-            <div style="text-align: center;">
-                <h1 class="animate__animated animate__fadeInDown">Welcome, {{ session['name'] }}</h1>
-                <p class="animate__animated animate__fadeIn">View your activity logs and productivity stats below.</p>
-            </div>
+        <div class="hero-content">
+            <h1 class="animate__animated animate__fadeInDown">Welcome, {{ session['name'] }}</h1>
+            <p class="animate__animated animate__fadeIn">View your activity logs and productivity stats below.</p>
         </div>
     </div>
 
     <div class="main-content">
-        <section class="stats-overview">
-            <div class="stat-card">
-                <h3>Total Absence Time</h3>
-                <p id="total-absence-time">{{ total_absence_time }} hours</p>
+        <div class="card-container">
+            <!-- Recording Card -->
+            <div class="card">
+                <img src="{{ url_for('static', filename='images/recording.png') }}" alt="Recording Image">
+                <h3>Recording</h3>
+                <div class="timer" id="recording-timer">00:00</div>
+                <button class="btn" id="start-rec-btn">Start Recording</button>
+                <button class="btn" id="stop-rec-btn">Stop Recording</button>
             </div>
-            <div class="stat-card">
-                <h3>Total Phone Usage Time</h3>
-                <p id="total-phone-usage-time">{{ total_phone_usage_time }} minutes</p>
-            </div>
-            <div class="stat-card">
-                <h3>Total Working Hours</h3>
-                <p id="total-working-hours">{{ total_working_hours }} hours</p>
-            </div>
-        </section>
 
+            <!-- Meeting Card -->
+            <div class="card">
+                <img src="{{ url_for('static', filename='images/meeting.png') }}" alt="Meeting Image">
+                <h3>Meeting</h3>
+                <div class="timer" id="meeting-timer">00:00</div>
+                <button class="btn" id="meeting-btn">Start Meeting</button>
+            </div>
+
+            <!-- Lunch Card -->
+            <div class="card">
+                <img src="{{ url_for('static', filename='images/lunch.png') }}" alt="Lunch Image">
+                <h3>Lunch Break</h3>
+                <div class="timer" id="lunch-timer">00:00</div>
+                <button class="btn" id="lunch-btn">Start Lunch</button>
+                <button class="btn" id="stop-lunch-btn">Stop Lunch</button>
+            </div>
+        </div>
+
+        <!-- Activity Logs -->
         <section class="log-container">
             <h2>Activity Logs</h2>
             <ul id="log-list">
                 {% for log in logs %}
-                <li>{{ log.log_time }}: {{ log.event }}</li>
+                <li>{{ log.log_time }} : {{ log.event }}</li>
                 {% endfor %}
             </ul>
         </section>
-
-        <!-- Updated buttons for start recording, lunch break, and meeting -->
-        <button class="btn" id="start-rec-btn">Start Recording</button>
-        <button class="btn" id="lunch-btn">Lunch Break</button>
-        <button class="btn" id="meeting-btn">Meeting</button>
-        <button class="btn" id="stop-rec-btn">Stop Recording</button>
-
     </div>
 
     <!-- Modal for Meeting Details -->
@@ -144,14 +229,15 @@
             <span class="close-modal" id="close-modal">&times;</span>
             <h2>Meeting Info</h2>
             <form id="meeting-form" method="POST">
-                <label for="meeting-with">Meeting With:</label>
-                <input type="text" id="meeting-with" name="meeting_with" required>
-                <br><br>
-                <label for="meeting-desc">Description:</label>
-                <textarea id="meeting-desc" name="meeting_desc" required></textarea>
-                <br><br>
+                <div class="form-group">
+                    <label for="meeting-with">Meeting With:</label>
+                    <input type="text" id="meeting-with" name="meeting_with" required>
+                </div>
+                <div class="form-group">
+                    <label for="meeting-desc">Description:</label>
+                    <textarea id="meeting-desc" name="meeting_desc" required></textarea>
+                </div>
                 <button type="button" id="start-meeting-btn" class="btn">Start Meeting</button>
-                <button type="button" id="stop-meeting-btn" class="btn">Stop Meeting</button>
             </form>
         </div>
     </div>
@@ -161,70 +247,53 @@
         <div class="modal-content animate__animated animate__zoomIn">
             <span class="close-modal" id="close-lunch-modal">&times;</span>
             <h2>Lunch Break</h2>
-            <p>Do you want to pause recording for lunch?</p>
+            <p>Do you want to start your lunch break?</p>
             <button id="confirm-lunch-btn" class="btn">Yes</button>
             <button id="cancel-lunch-btn" class="btn">No</button>
         </div>
     </div>
 
-
-
+    <!-- JavaScript -->
     <script>
-        // Fetching logs
-        // function fetchLogs() {
-        //     fetch('/get-logs')
-        //         .then(response => response.json())
-        //         .then(data => {
-        //             // Update stats with actual data
-        //             document.getElementById('total-absence-time').textContent = data.total_absence_time + ' hours';
-        //             document.getElementById('total-phone-usage-time').textContent = data.total_phone_usage_time + ' minutes';
-        //             document.getElementById('total-working-hours').textContent = data.total_working_hours + ' hours';
-
-        //             // Populate activity logs
-        //             var logListElement = document.getElementById('log-list');
-        //             logListElement.innerHTML = ''; // Clear the log list before adding new data
-        //             data.logs.forEach(log => {
-        //                 var logListItem = document.createElement('li');
-        //                 logListItem.textContent = log.log_time + ': ' + log.event;
-        //                 logListElement.appendChild(logListItem);
-        //             });
-        //         })
-        //         .catch(error => console.error('Error fetching logs:', error));
-        // }
-
-        // Fetch logs on page load
-        // document.addEventListener('DOMContentLoaded', fetchLogs);
-
         // Start recording
         document.getElementById('start-rec-btn').addEventListener('click', function () {
-            fetch('/start-recording', {
-                method: 'POST'
-            })
+            fetch('/start-recording', { method: 'POST' })
                 .then(response => {
                     if (response.ok) {
                         alert('Recording started successfully!');
+                        startTimer('recording-timer'); // Start recording timer
                     } else {
-                        alert('Error starting recording: ' + response.statusText);
+                        alert('Error starting recording:' + response.statusText);
                     }
                 });
-
         });
 
+        // Stop recording
+        document.getElementById('stop-rec-btn').addEventListener('click', function () {
+            fetch('/stop-recording', { method: 'POST' })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Recording stopped successfully!');
+                        stopTimer('recording-timer'); // Stop recording timer
+                    } else {
+                        alert('Error stopping recording:' + response.statusText);
+                    }
+                });
+        });
+
+        // Start meeting modal-----------------------------
         const meetingBtn = document.getElementById('meeting-btn');
         const meetingModal = document.getElementById('meeting-modal');
         const closeModal = document.getElementById('close-modal');
 
-        // Show modal when meeting button clicked
         meetingBtn.addEventListener('click', function () {
             meetingModal.style.display = 'flex';
         });
 
-        // Close meeting modal on clicking close
         closeModal.addEventListener('click', function () {
             meetingModal.style.display = 'none';
         });
 
-        // Close meeting modal when clicking outside of modal content
         window.addEventListener('click', function (event) {
             if (event.target === meetingModal) {
                 meetingModal.style.display = 'none';
@@ -238,115 +307,109 @@
 
             fetch('/start-meeting', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: new URLSearchParams({
-                    meeting_with: meetingWith,
-                    meeting_desc: meetingDesc
-                })
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ meeting_with: meetingWith, meeting_desc: meetingDesc })
             })
                 .then(response => {
                     if (response.ok) {
                         alert('Meeting scheduled successfully!');
                         meetingModal.style.display = 'none';
-                        // Optionally fetch logs again to update the dashboard
-                        // fetchLogs();
+                        startTimer('meeting-timer'); // Start meeting timer
                     } else {
-                        alert('Error scheduling meeting: ' + response.statusText);
+                        alert('Error scheduling meeting:' + response.statusText);
                     }
                 });
         });
 
-        // Stop meeting
-        document.getElementById('stop-meeting-btn').addEventListener('click', function () {
-            fetch('/stop-meeting', {
-                method: 'POST'
-            })
-                .then(response => {
-                    if (response.ok) {
-                        alert('Meeting ended successfully!');
-                        // Optionally fetch logs again to update the dashboard
-                        // fetchLogs();
-                    } else {
-                        alert('Error ending meeting: ' + response.statusText);
-                    }
-                });
-        });
-
+        // Lunch break modal----------------------------------------
         const lunchBtn = document.getElementById('lunch-btn');
         const lunchModal = document.getElementById('lunch-modal');
         const closeLunchModal = document.getElementById('close-lunch-modal');
+        const confirmLunchBtn = document.getElementById('confirm-lunch-btn');
+        const cancelLunchBtn = document.getElementById('cancel-lunch-btn');
+        const stopLunchBtn = document.getElementById('stop-lunch-btn');
 
-        // Show lunch confirmation modal when lunch button clicked
+        // Check if lunch has already been taken
+        let lunchTaken = false;
+
+        function updateButtonStates() {
+            lunchBtn.disabled = lunchTaken; // Disable "Start Lunch" if lunch is taken
+            stopLunchBtn.disabled = !lunchTaken; // Disable "Stop Lunch" if lunch isn't taken
+        }
+
+        // Initialize button states on page load
+        updateButtonStates();
+
         lunchBtn.addEventListener('click', function () {
             lunchModal.style.display = 'flex';
         });
 
-        // Close lunch modal on clicking close
         closeLunchModal.addEventListener('click', function () {
             lunchModal.style.display = 'none';
         });
 
-        // Cancel lunch break
-        document.getElementById('cancel-lunch-btn').addEventListener('click', function () {
-            lunchModal.style.display = 'none'; // Close modal
+        cancelLunchBtn.addEventListener('click', function () {
+            lunchModal.style.display = 'none';
         });
 
-        // Confirm lunch break
-        document.getElementById('confirm-lunch-btn').addEventListener('click', function () {
-            fetch('/take-lunch', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: 'confirmation=pause'  // Sending confirmation to pause recording
-            })
+        confirmLunchBtn.addEventListener('click', function () {
+            fetch('/take-lunch', { method: 'POST' })
                 .then(response => {
                     if (response.ok) {
+                        alert('Lunch break started!');
                         lunchModal.style.display = 'none';
-                        alert('Lunch break started. Recording paused.');
+                        lunchTaken = true; // Set lunch as taken
+                        updateButtonStates();
+                        startTimer('lunch-timer'); // Start lunch timer
                     } else {
                         alert('Error during lunch break: ' + response.statusText);
                     }
                 });
         });
 
-        // Resume lunch break
-        document.getElementById('resume-lunch-btn').addEventListener('click', function () {
-            fetch('/take-lunch', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: 'confirmation=resume'  // Sending confirmation to resume recording
-            })
+        stopLunchBtn.addEventListener('click', function () {
+            fetch('/stop-lunch', { method: 'POST' })
                 .then(response => {
                     if (response.ok) {
-                        lunchModal.style.display = 'none';
-                        alert('Lunch break ended. Recording resumed.');
+                        alert('Lunch break stopped!');
+                        lunchTaken = false; // Allow lunch to be taken again
+                        updateButtonStates();
+                        stopTimer('lunch-timer'); // Stop lunch timer
                     } else {
-                        alert('Error resuming lunch break: ' + response.statusText);
+                        alert('Error during lunch break: ' + response.statusText);
                     }
                 });
         });
 
-        // Stop recording (if applicable)
-        document.getElementById('stop-rec-btn').addEventListener('click', function () {
-            fetch('/stop-recording', {
-                method: 'POST'
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert('Recording stopped successfully!');
-                } else {
-                    alert('Error stopping recording: ' + response.statusText);
-                }
-            });
-        });
 
 
+
+        // Timer functions
+        let timers = {};
+
+        function startTimer(timerId) {
+            let seconds = 0;
+
+            timers[timerId] = setInterval(() => {
+                seconds++;
+                const hours = Math.floor(seconds / 3600);
+                const minutes = Math.floor((seconds % 3600) / 60);
+                const secs = seconds % 60;
+
+                document.getElementById(timerId).textContent =
+                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function stopTimer(timerId) {
+            clearInterval(timers[timerId]);
+            timers[timerId] = null;
+
+            // Reset timer display to "00:00"
+            document.getElementById(timerId).textContent = "00:00";
+        }
     </script>
+
 </body>
 
 </html>
