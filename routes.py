@@ -1,3 +1,4 @@
+import base64
 import subprocess
 from flask import flash, request, render_template, session, redirect, url_for, jsonify
 from utilities import fetch_active_employees_count, fetch_departments_count, fetch_employees, verify_password, fetch_user_by_email, hash_password, log_user_login, log_user_logout,register_employee
@@ -22,13 +23,28 @@ def init_routes(app):
         role = request.form['role']
         department = request.form.get('department')
         position = request.form.get('position')
-        profile_picture = request.files['profile_picture']
-        
+
+        # Initialize a variable to hold image bytes
+        image_bytes = None
+
+        # Check if the image was captured from the webcam
+        if 'profile_picture' in request.form and request.form['profile_picture']:
+            image_data = request.form['profile_picture']
+            header, encoded = image_data.split(',', 1)  # Split header from data
+            image_bytes = base64.b64decode(encoded)  # Decode base64 data
+
+        # Check if an image file was uploaded
+        elif 'profile_picture_upload' in request.files and request.files['profile_picture_upload'].filename != '':
+            profile_picture_upload = request.files['profile_picture_upload']
+            image_bytes = profile_picture_upload.read()  # Read uploaded file bytes
+
+        # If no image is provided, return an error
+        if image_bytes is None:
+            flash("No profile picture provided. Please capture or upload an image.", 'danger')
+            return redirect(url_for('register_employee'))
+
         try:
-            # Convert image to bytes
-            image_bytes = profile_picture.read()
-            
-            # Create a new User object
+            # Create a new User object (assuming you have a User model)
             new_employee = User(
                 user_name=name,
                 email=email,
@@ -36,7 +52,7 @@ def init_routes(app):
                 role=role,
                 department=department,
                 position=position,
-                profile_picture=image_bytes  # Assuming you have a column for this
+                profile_picture=image_bytes  # Store the captured or uploaded image
             )
 
             db.session.add(new_employee)
@@ -49,6 +65,7 @@ def init_routes(app):
             db.session.rollback()
             flash(f"Error: {str(e)}", 'danger')
             return render_template('register_employee.html'), 400
+        
 
     @app.route('/login')
     def login():
@@ -66,7 +83,12 @@ def init_routes(app):
         user = fetch_user_by_email(email)
         if not user or not verify_password(user.password, password):
             return "Invalid credentials!", 401
-
+        
+        print(user.id)
+        print(user.role)
+        print(user.user_name)
+        print(user.email)
+        
         session['employee_id'] = user.id
         session['role'] = user.role
         session['name'] = user.user_name
@@ -207,14 +229,22 @@ def init_routes(app):
             employee_id = session.get('employee_id')  
             login_time = datetime.now().strftime('%H:%M:%S')
             name = session.get('name')
+            employee_email = session.get('email')
 
-            # Save login time in the EmployeeTracking table
-            track_entry = EmployeeTracking(employee_id=employee_id, name=name, login_time=login_time)
-            db.session.add(track_entry)
-            db.session.commit()
+            print(f"Employee ID: {employee_id}")    
+            print(f"Login Time: {login_time}")
+            print(f"Name: {name}")
+            print(f"email: {employee_email}")
+
+            # # Save login time in the EmployeeTracking table
+            # track_entry = EmployeeTracking(employee_id=employee_id, name=name, login_time=login_time)
+
+            # db.session.add(track_entry)
+            # db.session.commit()
 
             # Run the employee tracking script in the background
-            subprocess.Popen(['python', 'employee_tracker.py'], shell=True)
+            subprocess.Popen(['python', 'employee_tracker.py', str(employee_id), employee_email], shell=True)
+            # subprocess.Popen(['python', 'checker2.py'], shell=True)
             
             return jsonify({'message': 'Recording started successfully!'}), 200
         except Exception as e:

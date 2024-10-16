@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,81 +9,246 @@
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            text-align: center;
+            max-width: 420px;
+            width: 100%;
+            margin: auto;
+            /* Center the container */
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            /* Add space between form groups */
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="file"] {
+            width: calc(100% - 20px);
+            /* Full width with padding */
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            transition: border-color 0.3s ease;
+            /* Smooth transition for border color */
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #007bff;
+            /* Change border color on focus */
+        }
+
+        .webcam-box {
+            width: 100%;
+            height: auto;
+            background-color: #ccc;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
-            animation: fadeIn 0.5s;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        h2 {
             margin-bottom: 20px;
-            text-align: center;
+            flex-direction: column;
         }
-        input[type="text"], input[type="email"], input[type="password"], input[type="file"] {
+
+        .webcam-box video {
             width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            height: auto;
+            border-radius: 8px;
+        }
+        .capturedImage{
+            width: 100%;
+            height: auto;
         }
         button {
-            background-color: #5cb85c;
-            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
             border: none;
-            padding: 10px;
-            border-radius: 4px;
+            background-color: #28a745;
+            color: white;
             cursor: pointer;
-            width: 100%;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s ease;
         }
+
         button:hover {
-            background-color: #4cae4c;
+            background-color: #28a745;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 20px;
+                max-width: 90%;
+                margin-top: 20px;
+                animation-duration: 0.5s;
+            }
+
+            input[type="text"],
+            input[type="email"],
+            input[type="password"],
+            input[type="file"] {
+                font-size: 14px;
+                padding: 8px;
+            }
+
+            button {
+                font-size: 14px;
+                padding: 8px;
+            }
         }
     </style>
 </head>
+
 <body>
 
-<div class="container">
-    <h2>Register Employee</h2>
-    <form action="/register-employee" method="POST" enctype="multipart/form-data">
-        <input type="text" name="name" placeholder="Name" required>
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <input type="text" name="role" placeholder="Role" required>
-        <input type="text" name="department" placeholder="Department">
-        <input type="text" name="position" placeholder="Position">
+    <div class="login-container">
+        <h2>Register Employee</h2>
+        <form action="/register-employee" method="POST" enctype="multipart/form-data">
 
-        <label for="profile_picture">Profile Picture</label>
-        <input type="file" name="profile_picture" accept="image/*" capture="environment" required>
-        
-        <button type="submit">Register</button>
-    </form>
-</div>
+            <div class="form-group">
+                <input type="text" name="name" placeholder="Name" required>
+            </div>
 
-<script>
-    // Optional: Add some JavaScript for interactivity
-    document.querySelector('input[type="file"]').addEventListener('change', function() {
-        if (this.files && this.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                console.log('Image uploaded:', e.target.result);
+            <div class="form-group">
+                <input type="email" name="email" placeholder="Email" required>
+            </div>
+
+            <div class="form-group">
+                <input type="password" name="password" placeholder="Password" required>
+            </div>
+
+            <div class="form-group">
+                <input type="text" name="role" placeholder="Role" required>
+            </div>
+
+            <div class="form-group">
+                <input type="text" name="department" placeholder="Department">
+            </div>
+
+            <div class="form-group">
+                <input type="text" name="position" placeholder="Position">
+            </div>
+
+            <div class="form-group" style="text-align:center;">
+                <p>Capture a profile picture</p>
+                <div class="webcam-box">
+                    <video id="video" autoplay></video>
+                    <canvas id="canvas" style="display:none;"></canvas>
+                    <input type="hidden" name="profile_picture" id="profile_picture">
+                    <img id="capturedImage" style="display:none; " class="capturedImage"> <!-- Hidden initially -->
+                </div>
+                <button type="button" style="margin-top:10px;" id="capture">Capture</button>
+            </div>
+
+            <p> OR upload a profile picture </p>
+
+            <div class="form-group">
+                <input type="file" name="profile_picture_upload" accept="image/*">
+            </div>
+
+            <div class="form-group">
+                <button type="submit">Register</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Optional JavaScript for interactivity
+        document.querySelector('input[type=file]').addEventListener('change', function () {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    console.log('Image uploaded:', e.target.result);
+                }
+                reader.readAsDataURL(this.files[0]);
             }
-            reader.readAsDataURL(this.files[0]);
-        }
-    });
-</script>
+        });
 
+        // Access the camera
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const profilePictureInput = document.getElementById('profile_picture');
+        const capturedImage = document.getElementById('capturedImage');
+        const captureButton = document.getElementById('capture');
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error("Error accessing the camera:", err);
+            });
+
+        document.getElementById('capture').addEventListener('click', () => {
+            // Pause the video to freeze the frame
+            if (capturedImage.style.display === 'none') {
+
+                video.pause();
+
+                // Set canvas dimensions to match the video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                // Draw current frame from video onto canvas
+                const context = canvas.getContext('2d');
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Convert image to data URL and set it as value of hidden input
+                const dataURL = canvas.toDataURL('image/png');
+                profilePictureInput.value = dataURL;
+
+                // Display captured image over video feed
+                capturedImage.src = dataURL;
+                capturedImage.style.display = 'block'; // Show captured image
+
+                // Hide video feed
+                video.style.display = 'none';
+
+                // Change button text to "Re-capture"
+                document.getElementById('capture').textContent = 'Re-capture';
+            }
+            else {
+                // If image is displayed, reset to capture mode
+                capturedImage.style.display = 'none'; // Hide captured image
+                video.style.display = 'block'; // Show video feed again
+
+                // Change button text back to "Capture"
+                document.getElementById('capture').textContent = 'Capture';
+
+                // Resume video playback
+                video.play();
+            }
+        });
+
+        // document.getElementById('capture').addEventListener('click', () => {
+        //     if (capturedImage.style.display === 'block') {
+
+        //     }
+        // });
+    </script>
 </body>
+
 </html>

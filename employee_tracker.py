@@ -168,6 +168,8 @@ from ultralytics import YOLO
 from flask_sqlalchemy import SQLAlchemy
 from app import db, app  # Import db and app from your Flask app
 import numpy as np
+from flask import session
+import sys
 
 # Import models
 from models import BreakLog, User
@@ -177,6 +179,15 @@ model = YOLO("../weights/yolov10n.pt")  # Adjust path to your YOLOv10 model
 
 # Start video capture
 cap = cv2.VideoCapture(0)
+
+# Get command line arguments for employee ID and email
+if len(sys.argv) < 3:
+    print("Not enough arguments provided.")
+    sys.exit(1)
+
+employee_id = sys.argv[1]
+employee_email = sys.argv[2]
+
 
 # Variables for tracking absence and breaks
 absence_start_time = None
@@ -193,7 +204,6 @@ total_phone_usage_time = 0
 
 with app.app_context():
     # Example: Fetch an employee based on a unique attribute (e.g., email)
-    employee_email = "emp1@gmail.com"  
 
     # Fetch the employee from the database
     employee = User.query.filter_by(email=employee_email).first()

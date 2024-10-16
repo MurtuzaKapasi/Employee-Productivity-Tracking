@@ -18,8 +18,6 @@ class LoginLog(db.Model):
     login_time = db.Column(db.DateTime, nullable=False)
     logout_time = db.Column(db.DateTime)
     total_working_hours = db.Column(db.Float)
-    phone_usage_time = db.Column(db.Float, default=0.0)
-    total_absent_time = db.Column(db.Float)
     status = db.Column(db.String(50), nullable=False)
 
 class EmployeeTracking(db.Model):
@@ -50,5 +48,14 @@ class LunchBreakLog(db.Model):
     employee_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime)
-    break_hours = db.Column(db.Float)
+    lunch_duration = db.Column(db.Float)
     is_active = db.Column(db.Boolean, default=False)    
+
+class RecordingLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    start_recording_time = db.Column(db.DateTime, nullable=False)
+    end_recording_time = db.Column(db.DateTime)
+    total_capture_time = db.Column(db.Float)
+    mobile_usage_time = db.Column(db.Float)
+    is_active = db.Column(db.Boolean, default=False)
