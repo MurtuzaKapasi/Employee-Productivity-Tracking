@@ -225,7 +225,6 @@ def init_routes(app):
 
     # Route to start recording
 
-
     @app.route('/start-recording', methods=['POST'])
     def start_recording():
         try:
@@ -250,7 +249,6 @@ def init_routes(app):
             print(f"Error occurred: {str(e)}")
             return jsonify({'error': str(e)}), 500
         
-
     # Route to get tracking data for a specific employee
     @app.route('/tracking-data/<employee_id>', methods=['GET'])
     def get_tracking_data(employee_id):
@@ -301,47 +299,90 @@ def init_routes(app):
     def start_meeting():
         try:
             employee_id = session.get('employee_id')
-            meeting_info = request.form['meeting_info']  # Expecting whom and description
-            track_entry = EmployeeTracking.query.filter_by(employee_id=employee_id).order_by(EmployeeTracking.id.desc()).first()
+            meeting_with = request.form['meeting_with']
+            meeting_desc = request.form['meeting_desc']
 
-            # Save meeting start time and info in the database
-            track_entry.meeting_start_time = datetime.now().strftime('%H:%M:%S')
-            track_entry.meeting_info = meeting_info
+            print(f"Starting meeting with {meeting_with} and description: {meeting_desc}")
+
+            # Check for existing active meetings on the same day
+
+            # today = datetime.now().date()
+            # existing_meeting = MeetingLog.query.filter(
+            #     MeetingLog.employee_id == employee_id,
+            #     MeetingLog.meeting_start_time >= datetime.combine(today, datetime.min.time()),
+            #     MeetingLog.meeting_start_time < datetime.combine(today, datetime.max.time()),
+            #     MeetingLog.is_active == True
+            # ).first()
+
+            # if existing_meeting:
+            #     return jsonify({'error': 'An active meeting already exists for today.'}), 400
+
+            # Call /stop-recording to pause recording before starting the meeting
+            print("calling Stop recording response: ")
+            stop_recording_response = stop_recording()  # Call the stop recording function directly
+            print(f"Stop recording response: {stop_recording_response[1]}")
+
+            # handle check or not????
+            if stop_recording_response[1] != 200:
+                return jsonify({'error': 'Failed to stop recording.'}), 500
+
+            print("Successfully stopped recording.")
+
+            # Create a new MeetingLog entry
+            new_meeting_log = MeetingLog(
+                employee_id=employee_id,
+                meeting_start_time=datetime.now(),
+                meeting_with=meeting_with,
+                meeting_desc=meeting_desc,
+                per_meeting_hours=0,
+                is_active=True
+            )
+
+            print(f"New meeting log: {new_meeting_log}")
+
+            db.session.add(new_meeting_log)
             db.session.commit()
 
-            # Optionally, pause the recording during the meeting
-            track_entry.recording_paused = True
-            db.session.commit()
-
-            return jsonify({'message': 'Meeting started. Recording paused.'}), 200
+            # Store meeting ID in session for later use
+            session['meeting_id'] = new_meeting_log.id
+            print(f"Meeting ID: {new_meeting_log.id}")
+            print("Successfully started meeting.")
+            return jsonify({'message': 'Meeting started. Recording paused.', 'meeting_id': new_meeting_log.id}), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-
+        
     @app.route('/stop-meeting', methods=['POST'])
     def stop_meeting():
         try:
-            employee_id = session.get('employee_id')
-            track_entry = EmployeeTracking.query.filter_by(employee_id=employee_id).order_by(EmployeeTracking.id.desc()).first()
+            meeting_id = session.get('meeting_id')
+            
+            if not meeting_id:
+                return jsonify({'error': 'No active meeting found.'}), 400
 
-            # Save meeting end time
-            track_entry.meeting_end_time = datetime.now().strftime('%H:%M:%S')
+            # Fetch the meeting log entry
+            meeting_log = MeetingLog.query.get(meeting_id)
+            
+            if not meeting_log or not meeting_log.is_active:
+                return jsonify({'error': 'Meeting not found or already ended.'}), 400
 
-            # Calculate meeting duration
-            meeting_duration = (datetime.strptime(track_entry.meeting_end_time, '%H:%M:%S') -
-                                datetime.strptime(track_entry.meeting_start_time, '%H:%M:%S')).total_seconds() / 3600
-            track_entry.meeting_duration = meeting_duration
+            # Update the meeting log with end time and duration
+            meeting_log.meeting_end_time = datetime.now()
+            # Calculate duration in hours and update per_meeting_hours
+            duration_seconds = (meeting_log.meeting_end_time - meeting_log.meeting_start_time).total_seconds()
+            meeting_log.per_meeting_hours = duration_seconds / 3600.0
+            meeting_log.is_active = False
+            
             db.session.commit()
+            
+            # Clear the meeting ID from session
+            session.pop('meeting_id', None)
 
-            # Resume recording after meeting ends
-            track_entry.recording_paused = False
-            db.session.commit()
+            return jsonify({'message': 'Meeting stopped successfully!', 'duration': meeting_log.per_meeting_hours}), 200
 
-            return jsonify({'message': 'Meeting ended. Recording resumed.'}), 200
         except Exception as e:
+            print(f"Error occurred in stop-meeting: {str(e)}")
             return jsonify({'error': str(e)}), 500
-
-    import psutil
-
+        
     @app.route('/stop-recording', methods=['POST'])
     def stop_recording():
         try:

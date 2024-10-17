@@ -33,8 +33,10 @@ class MeetingLog(db.Model):
     employee_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     meeting_start_time = db.Column(db.DateTime, nullable=False)
     meeting_end_time = db.Column(db.DateTime)
-    meeting_info = db.Column(db.JSON)
+    meeting_with = db.Column(db.String(100))
+    meeting_desc = db.Column(db.String(200))
     per_meeting_hours = db.Column(db.Float)
+    is_active = db.Column(db.Boolean, default=False)
 
 class BreakLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -49,7 +51,7 @@ class LunchBreakLog(db.Model):
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime)
     lunch_duration = db.Column(db.Float)
-    is_active = db.Column(db.Boolean, default=False)    
+    is_active = db.Column(db.Boolean, default=False)
 
 class RecordingLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
