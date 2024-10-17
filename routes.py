@@ -345,12 +345,6 @@ def init_routes(app):
     @app.route('/stop-recording', methods=['POST'])
     def stop_recording():
         try:
-            # Extract phone usage time from request
-            data = request.get_json()
-            print('Data:', data)
-            phone_usage_time = data.get('phone_usage_time')
-            print('Phone usage time:', phone_usage_time)
-
             # Get the process ID from session
             tracker_pid = session.get('tracker_pid')
             
@@ -384,7 +378,7 @@ def init_routes(app):
             # Log the stop of recording and update the tracking data
             employee_id = session.get('employee_id')
             if employee_id:
-                log_stop_recording(phone_usage_time)
+                log_stop_recording()
                 return jsonify({'message': 'Recording stopped successfully!'}), 200
             else:
                 return jsonify({'error': 'Employee not found in session'}), 400

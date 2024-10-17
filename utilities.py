@@ -295,7 +295,7 @@ def log_start_recording(employee_id):
     
     session['recording_log_id'] = track_entry.id
     
-def log_stop_recording(phone_usage_time):
+def log_stop_recording():
     recording_log_id = session.get('recording_log_id')
     if recording_log_id:
             recording_log = RecordingLog.query.get(recording_log_id)
@@ -305,7 +305,7 @@ def log_stop_recording(phone_usage_time):
 
                 recording_log.end_recording_time = end_time
                 recording_log.total_capture_time = total_capture_time
-                recording_log.mobile_usage_time = phone_usage_time
+                # recording_log.mobile_usage_time = phone_usage_time
                 recording_log.is_active = False
                 db.session.commit()
                 
