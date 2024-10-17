@@ -272,11 +272,7 @@
         document.getElementById('stop-rec-btn').addEventListener('click', function () {
             console.log('Stop recording clicked');
             let totalPhoneUsageTime = 10;
-            fetch('/stop-recording', {
-                 method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },    
-                    body: JSON.stringify({ phone_usage_time: totalPhoneUsageTime})                
-                 })
+            fetch('/stop-recording', { method: 'POST'})
                 .then(response => {
                     if (response.ok) {
                         alert('Recording stopped successfully!');

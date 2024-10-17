@@ -57,5 +57,12 @@ class RecordingLog(db.Model):
     start_recording_time = db.Column(db.DateTime, nullable=False)
     end_recording_time = db.Column(db.DateTime)
     total_capture_time = db.Column(db.Float)
-    mobile_usage_time = db.Column(db.Float)
     is_active = db.Column(db.Boolean, default=False)
+
+
+class MobileLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    start_time = db.Column(db.DateTime, nullable=False)
+    end_time = db.Column(db.DateTime)
+    mobile_usage_time = db.Column(db.Float)
