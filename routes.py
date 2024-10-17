@@ -302,20 +302,6 @@ def init_routes(app):
             meeting_with = request.form['meeting_with']
             meeting_desc = request.form['meeting_desc']
 
-            print(f"Starting meeting with {meeting_with} and description: {meeting_desc}")
-
-            # Check for existing active meetings on the same day
-
-            # today = datetime.now().date()
-            # existing_meeting = MeetingLog.query.filter(
-            #     MeetingLog.employee_id == employee_id,
-            #     MeetingLog.meeting_start_time >= datetime.combine(today, datetime.min.time()),
-            #     MeetingLog.meeting_start_time < datetime.combine(today, datetime.max.time()),
-            #     MeetingLog.is_active == True
-            # ).first()
-
-            # if existing_meeting:
-            #     return jsonify({'error': 'An active meeting already exists for today.'}), 400
 
             # Call /stop-recording to pause recording before starting the meeting
             print("calling Stop recording response: ")
