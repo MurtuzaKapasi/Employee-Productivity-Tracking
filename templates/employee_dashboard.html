@@ -375,7 +375,7 @@
         });
 
         confirmLunchBtn.addEventListener('click', function () {
-            fetch('/take-lunch', { method: 'POST' })
+            fetch('/start-lunch', { method: 'POST' })
                 .then(response => {
                     if (response.ok) {
                         alert('Lunch break started!');
@@ -390,7 +390,7 @@
         });
 
         stopLunchBtn.addEventListener('click', function () {
-            fetch('/stop-lunch', { method: 'POST' })
+            fetch('/end-lunch', { method: 'POST' })
                 .then(response => {
                     if (response.ok) {
                         alert('Lunch break stopped!');

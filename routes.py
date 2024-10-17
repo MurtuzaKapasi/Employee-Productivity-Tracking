@@ -6,7 +6,7 @@ from flask import flash, request, render_template, session, redirect, url_for, j
 import psutil
 from utilities import fetch_active_employees_count, fetch_departments_count, fetch_employees, log_start_recording, log_stop_recording, verify_password, fetch_user_by_email, hash_password, log_user_login, log_user_logout,register_employee
 from models import EmployeeTracking, User,db, LoginLog, MeetingLog, BreakLog, LunchBreakLog, RecordingLog
-from datetime import datetime
+from datetime import date, datetime
 import os
 import signal
 
@@ -263,34 +263,53 @@ def init_routes(app):
         else:
             return jsonify({'error': 'No tracking data found for this employee.'}), 404
 
-    @app.route('/take-lunch', methods=['POST'])
-    def take_lunch():
+    @app.route('/start-lunch', methods=['POST'])
+    def start_lunch():
         try:
             employee_id = session.get('employee_id')
-            confirmation = request.form.get('confirmation')  # Confirmation response from the popup
 
-            if confirmation == 'pause':
-                # Save the start of the lunch break in the database
-                track_entry = EmployeeTracking.query.filter_by(employee_id=employee_id).order_by(EmployeeTracking.id.desc()).first()
-                track_entry.lunch_start_time = datetime.now().strftime('%H:%M:%S')
-                db.session.commit()
+            # Get today's date
+            today_date = date.today()
 
-                return jsonify({'message': 'Lunch break started. Recording paused.'}), 200
+            # Check if a lunch break already exists for today for the employee
+            existing_lunch = LunchBreakLog.query.filter_by(employee_id=employee_id).filter(
+                db.func.date(LunchBreakLog.start_time) == today_date).first()
 
-            elif confirmation == 'resume':
-                # Save the end of the lunch break and resume recording
-                track_entry = EmployeeTracking.query.filter_by(employee_id=employee_id).order_by(EmployeeTracking.id.desc()).first()
-                track_entry.lunch_end_time = datetime.now().strftime('%H:%M:%S')
+            if existing_lunch:
+                return jsonify({'error': 'Lunch break already started today.'}), 400
 
-                # Calculate total lunch duration
-                lunch_duration = (datetime.strptime(track_entry.lunch_end_time, '%H:%M:%S') -
-                                datetime.strptime(track_entry.lunch_start_time, '%H:%M:%S')).total_seconds() / 3600
-                track_entry.lunch_duration = lunch_duration
-                db.session.commit()
+            # Start the lunch break and log the start_time in LunchBreakLog
+            new_lunch_break = LunchBreakLog(
+                employee_id=employee_id,
+                start_time=datetime.now(),
+                is_active=True  # Mark the lunch break as active
+            )
+            db.session.add(new_lunch_break)
+            db.session.commit()
 
-                return jsonify({'message': 'Lunch break finished. Recording resumed.'}), 200
-            else:
-                return jsonify({'error': 'Invalid confirmation response.'}), 400
+            return jsonify({'message': 'Lunch break started.'}), 200
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        
+    @app.route('/end-lunch', methods=['POST'])
+    def end_lunch():
+        try:
+            employee_id = session.get('employee_id')
+
+            # Fetch the active lunch break entry
+            lunch_break = LunchBreakLog.query.filter_by(employee_id=employee_id, is_active=True).first()
+
+            if not lunch_break:
+                return jsonify({'error': 'No active lunch break found.'}), 400
+
+            # Update the lunch break entry with end time and duration
+            lunch_break.end_time = datetime.now()
+            lunch_break.lunch_duration = (lunch_break.end_time - lunch_break.start_time).total_seconds() / 60.0
+            lunch_break.is_active = False
+            db.session.commit()
+
+            return jsonify({'message': 'Lunch break ended.', 'duration': lunch_break.lunch_duration}), 200
 
         except Exception as e:
             return jsonify({'error': str(e)}), 500
