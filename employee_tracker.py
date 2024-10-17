@@ -168,7 +168,7 @@ from ultralytics import YOLO
 import numpy as np
 import sys
 from app import db, app  # Import db and app from your Flask app
-from models import BreakLog, User, RecordingLog
+from models import BreakLog, MobileLog, User, RecordingLog
 import requests
 
 # Load the YOLOv10 model (for phone detection)
@@ -276,6 +276,24 @@ def detect_phone(frame, current_time):
         if phone_usage_start_time:
             phone_usage_duration = (current_time - phone_usage_start_time).total_seconds()
             total_phone_usage_time += phone_usage_duration
+            
+            if phone_usage_duration > 5:
+                print(f"Logging phone usage of {phone_usage_duration} seconds")
+                phone_usage_end_time = current_time
+
+                # Add to MobileLog table
+                with app.app_context():
+                    new_mobile_log = MobileLog(
+                        employee_id=employee_id,
+                        start_time=phone_usage_start_time,
+                        end_time=phone_usage_end_time,
+                        mobile_usage_time=phone_usage_duration
+                    )
+                    db.session.add(new_mobile_log)
+                    db.session.commit()
+                    print('Committed!')                    
+            
+            
             phone_usage_start_time = None
             print(f"Phone usage ended at {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
@@ -299,21 +317,21 @@ while True:
 cap.release()
 cv2.destroyAllWindows()
 
-# Send phone usage time to the stop-recording route
-try:
-    print('Sending phone usage time to the server...')  
-    response = requests.post(
-        "http://127.0.0.1:5000/stop-recording",  
-        json={'employee_id': employee_id, 'phone_usage_time': total_phone_usage_time}
-    )
-    print(f"Sent phone usage time: {total_phone_usage_time} seconds")  
+# # Send phone usage time to the stop-recording route
+# try:
+#     print('Sending phone usage time to the server...')  
+#     response = requests.post(
+#         "http://127.0.0.1:5000/stop-recording",  
+#         json={'employee_id': employee_id, 'phone_usage_time': total_phone_usage_time}
+#     )
+#     print(f"Sent phone usage time: {total_phone_usage_time} seconds")  
 
-    # CHANGED: Debugging network issues with response status code
-    if response.status_code != 200:
-        print(f"Failed with status code: {response.status_code}, response: {response.text}")
+#     # CHANGED: Debugging network issues with response status code
+#     if response.status_code != 200:
+#         print(f"Failed with status code: {response.status_code}, response: {response.text}")
 
-except requests.exceptions.RequestException as e:
-    print(f"Failed to send phone usage time: {e}")
+# except requests.exceptions.RequestException as e:
+#     print(f"Failed to send phone usage time: {e}")
 
 
 # def get_phone_usage_time():
