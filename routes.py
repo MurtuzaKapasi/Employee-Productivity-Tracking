@@ -321,18 +321,16 @@ def init_routes(app):
             meeting_with = request.form['meeting_with']
             meeting_desc = request.form['meeting_desc']
 
+            # Check if recording is active
+            recording_active = session.get('recording_log_id')  # Assuming you store this flag in session
 
-            # Call /stop-recording to pause recording before starting the meeting
-            print("calling Stop recording response: ")
-            stop_recording_response = stop_recording()  # Call the stop recording function directly
-            print(f"Stop recording response: {stop_recording_response[1]}")
+            if recording_active:
+                return jsonify({'message': 'Recording is currently active. Please stop the recording before starting a meeting.'}), 200
 
-            # handle check or not????
-            if stop_recording_response[1] != 200:
-                return jsonify({'error': 'Failed to stop recording.'}), 500
-
-            print("Successfully stopped recording.")
-
+            meeting_log = MeetingLog.query.filter_by(employee_id=employee_id).order_by(MeetingLog.id.desc()).first()
+            if meeting_log and meeting_log.is_active:
+                return jsonify({'message': 'Meeting is currently active. Please stop the meeting before starting a new one.'}), 200
+            
             # Create a new MeetingLog entry
             new_meeting_log = MeetingLog(
                 employee_id=employee_id,
@@ -343,16 +341,16 @@ def init_routes(app):
                 is_active=True
             )
 
-            print(f"New meeting log: {new_meeting_log}")
-
             db.session.add(new_meeting_log)
             db.session.commit()
 
             # Store meeting ID in session for later use
             session['meeting_id'] = new_meeting_log.id
+
             print(f"Meeting ID: {new_meeting_log.id}")
             print("Successfully started meeting.")
-            return jsonify({'message': 'Meeting started. Recording paused.', 'meeting_id': new_meeting_log.id}), 200
+            return jsonify({'message': 'Meeting started successfully.', 'meeting_id': new_meeting_log.id}), 200
+
         except Exception as e:
             return jsonify({'error': str(e)}), 500
         
@@ -372,7 +370,6 @@ def init_routes(app):
 
             # Update the meeting log with end time and duration
             meeting_log.meeting_end_time = datetime.now()
-            # Calculate duration in hours and update per_meeting_hours
             duration_seconds = (meeting_log.meeting_end_time - meeting_log.meeting_start_time).total_seconds()
             meeting_log.per_meeting_hours = duration_seconds / 3600.0
             meeting_log.is_active = False

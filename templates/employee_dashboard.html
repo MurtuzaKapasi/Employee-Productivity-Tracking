@@ -304,6 +304,7 @@
         });
 
         // Start meeting
+        // Function to start the meeting
         document.getElementById('start-meeting-btn').addEventListener('click', function () {
             const meetingWith = document.getElementById('meeting-with').value;
             const meetingDesc = document.getElementById('meeting-desc').value;
@@ -314,30 +315,35 @@
                 body: new URLSearchParams({ meeting_with: meetingWith, meeting_desc: meetingDesc })
             })
                 .then(response => {
-                    if (response.ok) {
-                        alert('Meeting scheduled successfully!');
-                        meetingModal.style.display = 'none';
-                        startTimer('meeting-timer'); // Start meeting timer
-                    } else {
-                        alert('Error scheduling meeting:' + response.statusText);
-                    }
+                    return response.json(); // Parse JSON response regardless of status
+                })
+                .then(data => {
+                    alert(data.message);
+                    if (data.message === 'Meeting started successfully.') {
+                        startTimer('meeting-timer'); // Assuming 'meeting-timer' is the ID of your timer element
+                    } // Show success or informational message
+                })
+                .catch(error => {
+                    console.error('Error during fetch:', error);
+                    alert('Error: ' + error.message); // Show error message if any
                 });
         });
-
         // Function to stop the meeting
         document.getElementById('stop-meeting-btn').addEventListener('click', function () {
             console.log('Stop meeting clicked');
 
             // Fetch call to stop the meeting
             fetch('/stop-meeting', {
-                method: 'POST'})
+                method: 'POST'
+            })
                 .then(response => {
                     if (response.ok) {
                         alert('Meeting recording stopped successfully!');
                         stopTimer('meeting-timer'); // Stop recording timer
                     } else {
                         alert('Error stopping meeting:' + response.statusText);
-                }})
+                    }
+                })
                 .catch(error => {
                     console.error('Error during fetch:', error);
                     alert(error.message); // Show error message
