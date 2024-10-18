@@ -226,25 +226,46 @@ def check_presence(frame, current_time):
         if matches[0]:
             user_found = True
             if absence_start_time:
+                # Calculate the duration of the absence in seconds
                 absence_duration = (current_time - absence_start_time).total_seconds()
+
+                # Only consider a break if it lasts more than 15 seconds
                 if absence_duration > 15:
                     break_duration = absence_duration
                     break_end_time = current_time
+                    
+                    # Determine the break category based on the duration
+                    if 15 <= break_duration <= 30:
+                        break_category = "Low"
+                    elif 30 < break_duration <= 45:
+                        break_category = "Medium"
+                    elif 45 < break_duration <= 60:
+                        break_category = "High"
+                    else:
+                        break_category = "Extreme"
+
                     with app.app_context():
+                        # Create a new BreakLog entry with the break category
                         new_break = BreakLog(
                             employee_id=employee_id,
                             start_time=absence_start_time,
                             end_time=break_end_time,
-                            break_time=break_duration
+                            break_time=break_duration,
+                            break_category=break_category
                         )
                         db.session.add(new_break)
                         db.session.commit()
+                    
+                    # Reset absence tracking
                     absence_start_time = None
+            
+            # Draw a rectangle around the detected face
             for (top, right, bottom, left) in face_locations:
                 cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
                 cv2.putText(frame, "Present", (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
     if not user_found and absence_start_time is None:
+        # Employee is absent, start tracking absence
         absence_start_time = current_time
         print(f"Employee {employee_id} absent at {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
@@ -276,10 +297,20 @@ def detect_phone(frame, current_time):
         if phone_usage_start_time:
             phone_usage_duration = (current_time - phone_usage_start_time).total_seconds()
             total_phone_usage_time += phone_usage_duration
-            
+
             if phone_usage_duration > 5:
                 print(f"Logging phone usage of {phone_usage_duration} seconds")
                 phone_usage_end_time = current_time
+
+                # Determine the mobile usage category
+                if 5 <= phone_usage_duration <= 10:
+                    mobile_usage_category = "Low"
+                elif 10 < phone_usage_duration <= 20:
+                    mobile_usage_category = "Medium"
+                elif 20 < phone_usage_duration <= 30:
+                    mobile_usage_category = "High"
+                else:
+                    mobile_usage_category = "Over 30 seconds"
 
                 # Add to MobileLog table
                 with app.app_context():
@@ -288,11 +319,11 @@ def detect_phone(frame, current_time):
                         start_time=phone_usage_start_time,
                         end_time=phone_usage_end_time,
                         mobile_usage_time=phone_usage_duration
+                        mobile_usage_category=mobile_usage_category
                     )
                     db.session.add(new_mobile_log)
                     db.session.commit()
-                    print('Committed!')                    
-            
+                    print('Committed!')
             
             phone_usage_start_time = None
             print(f"Phone usage ended at {current_time.strftime('%Y-%m-%d %H:%M:%S')}")

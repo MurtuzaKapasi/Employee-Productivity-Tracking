@@ -44,6 +44,7 @@ class BreakLog(db.Model):
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime)
     break_time = db.Column(db.Float)
+    break_category = db.Column(db.String(100))
 
 class LunchBreakLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -68,3 +69,4 @@ class MobileLog(db.Model):
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime)
     mobile_usage_time = db.Column(db.Float)
+    mobile_usage_category = db.Column(db.String(100))
