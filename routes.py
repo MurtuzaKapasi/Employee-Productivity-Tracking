@@ -4,7 +4,7 @@ import subprocess
 import traceback
 from flask import flash, request, render_template, session, redirect, url_for, jsonify
 import psutil
-from utilities import fetch_active_employees_count, fetch_departments_count, fetch_employees, log_start_recording, log_stop_recording, verify_password, fetch_user_by_email, hash_password, log_user_login, log_user_logout,register_employee
+from utilities import fetch_active_employees_count, fetch_departments_count, fetch_employees, log_employee_logout, log_start_recording, log_stop_recording, verify_password, fetch_user_by_email, hash_password, log_user_login, log_user_logout,register_employee
 from models import EmployeeTracking, User,db, LoginLog, MeetingLog, BreakLog, LunchBreakLog, RecordingLog
 from datetime import date, datetime
 import os
@@ -132,8 +132,10 @@ def init_routes(app):
     def logout():
         employee_id = session.get('employee_id')
         admin_id = session.get('admin_id')
+        
         if employee_id:
             log_user_logout(employee_id)
+            log_employee_logout(employee_id)
             session.clear()
         elif admin_id:
             log_user_logout(admin_id)
@@ -305,7 +307,7 @@ def init_routes(app):
 
             # Update the lunch break entry with end time and duration
             lunch_break.end_time = datetime.now()
-            lunch_break.lunch_duration = (lunch_break.end_time - lunch_break.start_time).total_seconds() / 60.0
+            lunch_break.lunch_duration = (lunch_break.end_time - lunch_break.start_time).total_seconds()
             lunch_break.is_active = False
             db.session.commit()
 
@@ -371,7 +373,7 @@ def init_routes(app):
             # Update the meeting log with end time and duration
             meeting_log.meeting_end_time = datetime.now()
             duration_seconds = (meeting_log.meeting_end_time - meeting_log.meeting_start_time).total_seconds()
-            meeting_log.per_meeting_hours = duration_seconds / 3600.0
+            meeting_log.per_meeting_hours = duration_seconds
             meeting_log.is_active = False
             
             db.session.commit()

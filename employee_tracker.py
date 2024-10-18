@@ -318,7 +318,7 @@ def detect_phone(frame, current_time):
                         employee_id=employee_id,
                         start_time=phone_usage_start_time,
                         end_time=phone_usage_end_time,
-                        mobile_usage_time=phone_usage_duration
+                        mobile_usage_time=phone_usage_duration,
                         mobile_usage_category=mobile_usage_category
                     )
                     db.session.add(new_mobile_log)

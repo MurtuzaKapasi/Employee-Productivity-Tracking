@@ -26,6 +26,19 @@ class EmployeeTracking(db.Model):
     name = db.Column(db.String(100), nullable=False)
     department = db.Column(db.String(100), nullable=False)
     position = db.Column(db.String(100), nullable=False)
+    login_time = db.Column(db.DateTime, nullable=False)
+    logout_time = db.Column(db.DateTime)
+    total_working_hours = db.Column(db.Float)
+    total_recording_time = db.Column(db.Float)
+    total_break_time = db.Column(db.Float)
+    no_of_breaks = db.Column(db.Integer)
+    total_mobile_usage_time = db.Column(db.Float)
+    no_of_mobile_used = db.Column(db.Integer)
+    total_meeting_time = db.Column(db.Float)
+    no_of_meetings = db.Column(db.Integer)
+    lunch_duration = db.Column(db.Float)
+    total_present_time = db.Column(db.Float)
+    productivity_score = db.Column(db.Float)
 
 
 class MeetingLog(db.Model):
