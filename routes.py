@@ -273,23 +273,29 @@ def init_routes(app):
             # Get today's date
             today_date = date.today()
 
+
+            # Check if recording is active
+            recording_active = session.get('recording_log_id')  # Assuming you store this flag in session
+            if recording_active:
+                return jsonify({'message': 'Recording is currently active. Please stop the recording before starting a meeting.'}), 200
+            
             # Check if a lunch break already exists for today for the employee
             existing_lunch = LunchBreakLog.query.filter_by(employee_id=employee_id).filter(
                 db.func.date(LunchBreakLog.start_time) == today_date).first()
 
             if existing_lunch:
-                return jsonify({'error': 'Lunch break already started today.'}), 400
+                return jsonify({'message': 'Lunch break already started today.'}), 200
 
             # Start the lunch break and log the start_time in LunchBreakLog
             new_lunch_break = LunchBreakLog(
                 employee_id=employee_id,
                 start_time=datetime.now(),
-                is_active=True  # Mark the lunch break as active
+                is_active=True  
             )
             db.session.add(new_lunch_break)
             db.session.commit()
 
-            return jsonify({'message': 'Lunch break started.'}), 200
+            return jsonify({'message': 'Lunch break started. Have a Great Meal!'}), 200
 
         except Exception as e:
             return jsonify({'error': str(e)}), 500
@@ -312,7 +318,6 @@ def init_routes(app):
             db.session.commit()
 
             return jsonify({'message': 'Lunch break ended.', 'duration': lunch_break.lunch_duration}), 200
-
         except Exception as e:
             return jsonify({'error': str(e)}), 500
             
@@ -349,8 +354,6 @@ def init_routes(app):
             # Store meeting ID in session for later use
             session['meeting_id'] = new_meeting_log.id
 
-            print(f"Meeting ID: {new_meeting_log.id}")
-            print("Successfully started meeting.")
             return jsonify({'message': 'Meeting started successfully.', 'meeting_id': new_meeting_log.id}), 200
 
         except Exception as e:
@@ -374,6 +377,8 @@ def init_routes(app):
             meeting_log.meeting_end_time = datetime.now()
             duration_seconds = (meeting_log.meeting_end_time - meeting_log.meeting_start_time).total_seconds()
             meeting_log.per_meeting_hours = duration_seconds
+            duration_seconds = (meeting_log.meeting_end_time - meeting_log.meeting_start_time).total_seconds() / 60.0
+            meeting_log.per_meeting_hours = duration_seconds / 3600.0
             meeting_log.is_active = False
             
             db.session.commit()

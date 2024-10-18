@@ -328,6 +328,7 @@
                     alert('Error: ' + error.message); // Show error message if any
                 });
         });
+
         // Function to stop the meeting
         document.getElementById('stop-meeting-btn').addEventListener('click', function () {
             console.log('Stop meeting clicked');
@@ -349,6 +350,7 @@
                     alert(error.message); // Show error message
                 });
         });
+
         // Lunch break modal----------------------------------------
         const lunchBtn = document.getElementById('lunch-btn');
         const lunchModal = document.getElementById('lunch-modal');
@@ -383,33 +385,52 @@
         confirmLunchBtn.addEventListener('click', function () {
             fetch('/start-lunch', { method: 'POST' })
                 .then(response => {
-                    if (response.ok) {
-                        alert('Lunch break started!');
-                        lunchModal.style.display = 'none';
-                        lunchTaken = true; // Set lunch as taken
-                        updateButtonStates();
-                        startTimer('lunch-timer'); // Start lunch timer
-                    } else {
-                        alert('Error during lunch break: ' + response.statusText);
+                    return response.json(); // Parse JSON response
+                })
+                .then(data => {
+                    // Check if there's a message in the response
+                    if (data.message) {
+                        alert(data.message); // Display the message from the server
+                        if (data.message === 'Lunch break started. Have a Great Meal!') {
+                            lunchModal.style.display = 'none';
+                            lunchTaken = true; // Set lunch as taken
+                            updateButtonStates();
+                            startTimer('lunch-timer'); // Start lunch timer
+                        }
+                    } else if (data.error) {
+                        alert('Error during lunch break: ' + data.error); // Handle error messages
                     }
+                })
+                .catch(error => {
+                    console.error('Error during fetch:', error);
+                    alert('An unexpected error occurred: ' + error.message); // Show generic error message
                 });
         });
 
         stopLunchBtn.addEventListener('click', function () {
             fetch('/end-lunch', { method: 'POST' })
                 .then(response => {
-                    if (response.ok) {
-                        alert('Lunch break stopped!');
-                        lunchTaken = false; // Allow lunch to be taken again
-                        updateButtonStates();
-                        stopTimer('lunch-timer'); // Stop lunch timer
-                    } else {
-                        alert('Error during lunch break: ' + response.statusText);
+                    return response.json(); // Parse JSON response
+                })
+                .then(data => {
+                    // Check if there's a message in the response
+                    if (data.message) {
+                        alert(data.message); // Display the message from the server
+                        if (data.message === 'Lunch break ended.') {
+                            lunchTaken = false; // Allow lunch to be taken again
+                            updateButtonStates();
+                            stopTimer('lunch-timer'); // Stop lunch timer
+                        }
+                    } else if (data.error) {
+                        alert('Error during ending lunch: ' + data.error); // Handle error messages
                     }
+                })
+                .catch(error => {
+                    console.error('Error during fetch:', error);
+                    alert('An unexpected error occurred: ' + error.message); // Show generic error message
                 });
         });
-
-
+        
         // Timer functions
         let timers = {};
 
