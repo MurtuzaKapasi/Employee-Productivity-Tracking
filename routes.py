@@ -377,8 +377,8 @@ def init_routes(app):
             meeting_log.meeting_end_time = datetime.now()
             duration_seconds = (meeting_log.meeting_end_time - meeting_log.meeting_start_time).total_seconds()
             meeting_log.per_meeting_hours = duration_seconds
-            duration_seconds = (meeting_log.meeting_end_time - meeting_log.meeting_start_time).total_seconds() / 60.0
-            meeting_log.per_meeting_hours = duration_seconds / 3600.0
+            duration_seconds = (meeting_log.meeting_end_time - meeting_log.meeting_start_time).total_seconds()
+            meeting_log.per_meeting_hours = duration_seconds
             meeting_log.is_active = False
             
             db.session.commit()

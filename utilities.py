@@ -1,6 +1,6 @@
 from sqlalchemy import func
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import BreakLog, EmployeeTracking, MeetingLog, MobileLog, RecordingLog, User, LoginLog
+from models import BreakLog, EmployeeTracking, LunchBreakLog, MeetingLog, MobileLog, RecordingLog, User, LoginLog
 from datetime import datetime
 from flask import jsonify, session
 from models import db
@@ -61,7 +61,7 @@ def log_user_logout(user_id):
     logout_time = datetime.now()
     log_entry = LoginLog.query.filter_by(user_id=user_id, status='active').first()
     login_time = log_entry.login_time
-    total_working_hours = (logout_time - login_time).total_seconds() / 60.0
+    total_working_hours = (logout_time - login_time).total_seconds()
     if log_entry:
         log_entry.logout_time = logout_time
         log_entry.total_working_hours = total_working_hours
@@ -97,7 +97,7 @@ def log_stop_recording():
             recording_log = RecordingLog.query.get(recording_log_id)
             if recording_log:
                 end_time = datetime.now()
-                total_capture_time = (end_time - recording_log.start_recording_time).total_seconds() / 60.0
+                total_capture_time = (end_time - recording_log.start_recording_time).total_seconds()
 
                 recording_log.end_recording_time = end_time
                 recording_log.total_capture_time = total_capture_time
@@ -159,6 +159,11 @@ def log_employee_logout(employee_id):
         no_of_meetings = db.session.query(func.count(MeetingLog.id))\
             .filter(MeetingLog.employee_id == employee_id, MeetingLog.meeting_start_time >= login_time).scalar() or 0
         print(f"Total meeting time: {total_meeting_time}, Number of meetings: {no_of_meetings}")
+        
+        # Fetch total lunch duration from LunchBreakLog for today
+        lunch_duration = db.session.query(func.sum(LunchBreakLog.lunch_duration))\
+            .filter(LunchBreakLog.employee_id == employee_id, LunchBreakLog.start_time >= login_time).scalar() or 0
+        print(f"Total lunch duration: {lunch_duration}")
 
         # Calculate total present time and productivity score
         total_present_time = total_recording_time + total_meeting_time - total_break_time - total_mobile_usage_time
@@ -187,6 +192,7 @@ def log_employee_logout(employee_id):
             no_of_mobile_used=no_of_mobile_used,
             total_meeting_time=total_meeting_time,
             no_of_meetings=no_of_meetings,
+            lunch_duration = lunch_duration,
             total_present_time=total_present_time,
             productivity_score=productivity_score
         )
