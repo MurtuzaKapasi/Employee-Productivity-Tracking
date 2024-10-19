@@ -80,10 +80,12 @@
             height: auto;
             border-radius: 8px;
         }
-        .capturedImage{
+
+        .capturedImage {
             width: 100%;
             height: auto;
         }
+
         button {
             padding: 10px 15px;
             border-radius: 5px;
@@ -123,6 +125,89 @@
 </head>
 
 <body>
+    <style>
+        /* Style for dropdowns (select elements) */
+        select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            font-size: 16px;
+            color: #333;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            appearance: none;
+            /* Remove default arrow for custom styling */
+            background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' width='292.362' height='292.362' viewBox='0 0 292.362 292.362'><path fill='%23333' d='M287.39 69.245l-14.274-14.273c-4.74-4.743-12.432-4.743-17.173 0L146.181 164.733 36.42 54.972c-4.74-4.743-12.432-4.743-17.173 0L4.972 69.245c-4.74 4.743-4.74 12.435 0 17.175l127.664 127.663c4.74 4.74 12.43 4.74 17.171 0l137.584-137.583c4.743-4.743 4.743-12.435 0-17.175z'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 12px;
+        }
+
+        select:focus {
+            border-color: #007BFF;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.25);
+            outline: none;
+            background-color: #fff;
+        }
+
+        /* Style for buttons (add new options) */
+        button[type="button"] {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+            display: inline-block;
+            transition: background-color 0.3s ease;
+        }
+
+        button[type="button"]:hover {
+            background-color: #28a745;
+        }
+
+        button[type="button"]:focus {
+            outline: none;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+        }
+
+        /* Input fields for adding new options */
+        input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            color: #333;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #007BFF;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+
+        /* Make the select dropdown arrow on the right side */
+        select {
+            padding-right: 30px;
+            /* Space for the dropdown arrow */
+            position: relative;
+        }
+
+        /* Adjust the position of the hidden new department/position input fields */
+        #newDepartment,
+        #newPosition {
+            display: none;
+            margin-top: 10px;
+        }
+    </style>
 
     <div class="login-container">
         <h2>Register Employee</h2>
@@ -141,16 +226,37 @@
             </div>
 
             <div class="form-group">
-                <input type="text" name="role" placeholder="Role" required>
+                <label for="role">Role:</label>
+                <select name="role" id="role" required>
+                    <option value="employee">Employee</option>
+                    <option value="admin">Admin</option>
+                </select>
             </div>
 
             <div class="form-group">
-                <input type="text" name="department" placeholder="Department">
+                <label for="department">Department:</label>
+                <select name="department" id="department" required>
+                    <option value="development">Development</option>
+                    <option value="qa">Quality Assurance</option>
+                    <option value="devops">DevOps</option>
+                    <option value="hr">Human Resources</option>
+                </select>
+                <input type="text" id="newDepartment" placeholder="New Department" style="display: none;" />
+                <button type="button" id="addDepartmentBtn">New Department</button>
             </div>
 
             <div class="form-group">
-                <input type="text" name="position" placeholder="Position">
+                <label for="position">Position:</label>
+                <select name="position" id="position" required>
+                    <option value="software_engineer">Software Engineer</option>
+                    <option value="qa_engineer">QA Engineer</option>
+                    <option value="devops_engineer">DevOps Engineer</option>
+                    <option value="hr_manager">HR Manager</option>
+                </select>
+                <input type="text" id="newPosition" placeholder="New Position" style="display: none;" />
+                <button type="button" id="addPositionBtn">New Position</button>
             </div>
+
 
             <div class="form-group" style="text-align:center;">
                 <p>Capture a profile picture</p>
@@ -240,6 +346,55 @@
 
                 // Resume video playback
                 video.play();
+            }
+        });
+
+        // Add new department dynamically
+        document.getElementById('addDepartmentBtn').addEventListener('click', function () {
+            const newDepartmentInput = document.getElementById('newDepartment');
+
+            if (newDepartmentInput.style.display === 'none') {
+                newDepartmentInput.style.display = 'inline-block'; // Show input
+                document.getElementById('addDepartmentBtn').innerHTML = 'Add Department';
+
+            } else {
+                const newDepartmentValue = newDepartmentInput.value.trim();
+                if (newDepartmentValue) {
+                    const departmentSelect = document.getElementById('department');
+                    const newOption = document.createElement('option');
+                    newOption.value = newDepartmentValue.toLowerCase().replace(/\s+/g, '_');
+                    newOption.textContent = newDepartmentValue;
+                    departmentSelect.appendChild(newOption);
+                    departmentSelect.value = newOption.value; // Set newly added value
+                    newDepartmentInput.value = '';
+                    newDepartmentInput.style.display = 'none'; // Hide input after adding
+                    document.getElementById('addDepartmentBtn').innerHTML = 'New Department';
+                }
+            }
+        });
+
+        // Add new position dynamically
+        document.getElementById('addPositionBtn').addEventListener('click', function () {
+            const newPositionInput = document.getElementById('newPosition');
+
+            if (newPositionInput.style.display === 'none') {
+                newPositionInput.style.display = 'inline-block'; // Show input
+                document.getElementById('addPositionBtn').innerHTML = 'Add Position';
+
+            } else {
+                const newPositionValue = newPositionInput.value.trim();
+                if (newPositionValue) {
+                    const positionSelect = document.getElementById('position');
+                    const newOption = document.createElement('option');
+                    newOption.value = newPositionValue.toLowerCase().replace(/\s+/g, '_');
+                    newOption.textContent = newPositionValue;
+                    positionSelect.appendChild(newOption);
+                    positionSelect.value = newOption.value; // Set newly added value
+                    newPositionInput.value = '';
+                    newPositionInput.style.display = 'none'; // Hide input after adding
+                    document.getElementById('addPositionBtn').innerHTML = 'New Position';
+
+                }
             }
         });
 

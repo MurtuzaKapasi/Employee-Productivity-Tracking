@@ -32,7 +32,8 @@ def init_routes(app):
 
         # Initialize a variable to hold image bytes
         image_bytes = None
-
+        hashed_password = hash_password(password)
+        
         # Check if the image was captured from the webcam
         if 'profile_picture' in request.form and request.form['profile_picture']:
             image_data = request.form['profile_picture']
@@ -54,7 +55,7 @@ def init_routes(app):
             new_employee = User(
                 user_name=name,
                 email=email,
-                password=password,  # Consider hashing this
+                password=hashed_password,  # Consider hashing this
                 role=role,
                 department=department,
                 position=position,
@@ -118,6 +119,7 @@ def init_routes(app):
                 session['admin_logged_in'] = True
                 session['admin_id'] = admin.id  # Save admin id in session for later use
                 session['name'] = admin.user_name  
+                log_user_login(admin.id)
 
                 flash('Login successful', 'success')
                 return redirect(url_for('admin_dashboard'))  # Redirect to the admin dashboard
