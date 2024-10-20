@@ -248,10 +248,11 @@
             <div class="form-group">
                 <label for="position">Position:</label>
                 <select name="position" id="position" required>
-                    <option value="software_engineer">Software Engineer</option>
-                    <option value="qa_engineer">QA Engineer</option>
-                    <option value="devops_engineer">DevOps Engineer</option>
-                    <option value="hr_manager">HR Manager</option>
+                    <option value="intern" id="intern">Intern</option>
+                    <option value="sde1" id="sde1">SDE 1</option>
+                    <option value="sde2" id="sde2">SDE 2</option>
+                    <option value="senior" id="senior">Senior</option>
+                    <option value="principal" id="principal">Principal </option>
                 </select>
                 <input type="text" id="newPosition" placeholder="New Position" style="display: none;" />
                 <button type="button" id="addPositionBtn">New Position</button>
@@ -398,11 +399,6 @@
             }
         });
 
-        // document.getElementById('capture').addEventListener('click', () => {
-        //     if (capturedImage.style.display === 'block') {
-
-        //     }
-        // });
     </script>
 </body>
 

@@ -89,7 +89,12 @@ def init_routes(app):
 
         user = fetch_user_by_email(email)
         if not user or not verify_password(user.password, password):
-            return "Invalid credentials!", 401
+            return '''
+                <script>
+                    alert("Invalid credentials!");
+                    window.location.href = "/manual-login"; // Redirect to login page
+                </script>
+        '''
         
         
         session['employee_id'] = user.id
@@ -152,6 +157,9 @@ def init_routes(app):
         total_departments = fetch_departments_count()
         active_employees = fetch_active_employees_count()
         inactive_employees = total_employees - active_employees
+
+        departmentLabels = []
+        productivityHours = []
         if 'admin_id' in session:
             return render_template('admin_dashboard.html', employees=employees, total_employees=total_employees,
                                total_departments=total_departments, active_employees=active_employees,
@@ -439,3 +447,25 @@ def init_routes(app):
             print(f"Error occurred in stop-recording: {str(e)}")
             return jsonify({'error': str(e)}), 500
     
+    @app.route('/employee_list', methods=['GET'])
+    def employee_list():
+        employees = fetch_employees() 
+        total_employees = len(employees)
+        total_departments = fetch_departments_count()
+        active_employees = fetch_active_employees_count()
+        inactive_employees = total_employees - active_employees
+
+        department_counts = (
+            db.session.query(User.department, db.func.count(User.id))
+            .group_by(User.department)
+            .all()
+        )
+        
+        position_counts = (
+            db.session.query(User.position, db.func.count(User.id))
+            .group_by(User.position)
+            .all()
+        )
+
+        return render_template('employee_list.html', employees=employees, total_employees=total_employees, total_departments=total_departments, active_employees=active_employees, inactive_employees=inactive_employees, department_counts=department_counts,
+        position_counts=position_counts)

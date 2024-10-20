@@ -172,7 +172,7 @@ button:hover {
 .sidebar h2 {
     color: white;
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 50px;
 }
 
 .sidebar ul {
@@ -182,6 +182,7 @@ button:hover {
 
 .sidebar ul li {
     margin-bottom: 20px;
+    text-align: center;
 }
 
 .sidebar ul li a {

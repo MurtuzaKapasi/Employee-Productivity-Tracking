@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -34,13 +35,10 @@
             <li><a href="/admin-dashboard">Dashboard</a></li>
             <li><a href="/register-employee">Add Employee</a></li>
             <li><a href="/remove-employee">Remove Employee</a></li>
-            <li><a href="/add-section">Create Section</a></li>
-            <li><a href="/employee-list">Employee List</a></li>
-            <li><a href="/statistics">Statistics</a></li>
+            <li><a href="/employee_list">Employee List</a></li>
         </ul>
     </nav>
 
-   {console.log(employees)}
 
     <!-- Main Content Area -->
     <div class="main-content">
@@ -56,7 +54,7 @@
     
 
         <!-- Stats Overview -->
-        <section class="stats-overview">
+        <section class="animate__animated animate__fadeInDown stats-overview">
             <div class="stat-card">
                 <h3>Total Employees</h3>
                 <p>{{ total_employees }}</p>
@@ -81,39 +79,19 @@
             <canvas id="productivityChart"></canvas>
         </section>
 
-        <!-- Dynamic Content Area -->
-        <section class="dynamic-content">
-            <h2>Employee List (Department-wise)</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Employee ID</th>
-                        <th>Name</th>
-                        <th>Department</th>
-                        <th>Position</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for employee in employees %}
-                    <tr>
-                        <td>{{ employee.id }}</td>
-                        <td>{{ employee.user_name }}</td>
-                        <td>{{ employee.department }}</td>
-                        <td>{{ employee.position }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </section>
+       
     </div>
 
     <!-- JavaScript for Chart.js to create department-wise productivity trends -->
     <script>
+        // Replace hardcoded values with dynamic data from the Flask backend
+
         const ctx = document.getElementById('productivityChart').getContext('2d');
         const productivityChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ['Testers', 'Interns', 'Senior Devs', 'Project Managers'], // Example departments
+                labels: ["Development", "QA", "Devops", "HR"], 
+                // labels : departmentLabels,
                 datasets: [{
                     label: 'Productivity Hours',
                     data: [12, 19, 3, 5], // Example data
