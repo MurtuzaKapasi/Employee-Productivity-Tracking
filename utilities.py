@@ -69,13 +69,15 @@ def log_user_logout(user_id):
         db.session.commit()
 
 def fetch_employees():
-    return EmployeeTracking.query.all()
+    # return EmployeeTracking.query.all()
+    return User.query.filter_by(role='employee').all()
 
 def fetch_departments_count():
-    return EmployeeTracking.query.distinct(EmployeeTracking.department).count()
+    # return EmployeeTracking.query.distinct(EmployeeTracking.department).count()
+    return User.query.filter_by(role='employee').distinct(User.department).count()
 
 def fetch_active_employees_count():
-    return LoginLog.query.filter_by(status='active').count()
+    return db.session.query(LoginLog).join(User).filter(User.role=='employee', LoginLog.status=='active').count()
 
 def log_start_recording(employee_id):
     emp = User.query.filter_by(id=employee_id).first()
