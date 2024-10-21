@@ -469,3 +469,34 @@ def init_routes(app):
 
         return render_template('employee_list.html', employees=employees, total_employees=total_employees, total_departments=total_departments, active_employees=active_employees, inactive_employees=inactive_employees, department_counts=department_counts,
         position_counts=position_counts)
+    
+    # @app.route('/remove-employee', methods=['GET'])
+    # def remove_employee():
+    #     return render_template('remove_employee.html' , department_employees = department_employees, position_employees = position_employees , employees = employees)
+
+    @app.route('/remove-employee', methods=[ 'GET','POST'])
+    def remove_employee():
+        if request.method == 'POST':
+            # Get selected employee IDs from the form
+            employee_ids = request.form.getlist('employee_ids')
+
+            if employee_ids:
+                # Fetch the selected employees from the database and delete them
+                employees_to_remove = User.query.filter(User.id.in_(employee_ids)).all()
+                for employee in employees_to_remove:
+                    db.session.delete(employee)
+
+                # Commit the changes to the database
+                db.session.commit()
+
+                flash(f'Successfully removed {len(employees_to_remove)} employees.', 'success')
+            else:
+                flash('No employees selected for removal.', 'danger')
+
+            return redirect(url_for('remove_employee'))
+        if request.method == 'GET':
+        # On GET request, fetch all employees to display
+            employees = User.query.all()
+            return render_template('remove_employee.html', employees=employees)
+
+

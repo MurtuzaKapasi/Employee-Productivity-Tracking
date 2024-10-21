@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    
     <title>Register Employee</title>
     <style>
         body {
@@ -208,6 +210,15 @@
             margin-top: 10px;
         }
     </style>
+    <nav class="sidebar">
+        <h2>Admin Panel</h2>
+        <ul>
+            <li><a href="/admin-dashboard">Dashboard</a></li>
+            <li><a href="/register-employee">Add Employee</a></li>
+            <li><a href="/remove-employee">Remove Employee</a></li>
+            <li><a href="/employee_list">Employee List</a></li>
+        </ul>
+    </nav>
 
     <div class="login-container">
         <h2>Register Employee</h2>

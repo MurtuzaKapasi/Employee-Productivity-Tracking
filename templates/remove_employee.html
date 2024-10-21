@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remove Employees</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+        }
+
+        .search-bar {
+            margin-bottom: 20px;
+        }
+
+        .employee-table {
+            margin-top: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .employee-table th,
+        .employee-table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .btn-remove {
+            margin-top: 20px;
+            width: 100%;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-remove:hover {
+            background-color: #dc3545;
+        }
+
+        .fade-in {
+            animation: fadeIn 1s ease-in;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+     <!-- Sidebar Navigation -->
+     <nav class="sidebar">
+        <h2>Admin Panel</h2>
+        <ul>
+            <li><a href="/admin-dashboard">Dashboard</a></li>
+            <li><a href="/register-employee">Add Employee</a></li>
+            <li><a href="/remove-employee">Remove Employee</a></li>
+            <li><a href="/employee_list">Employee List</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h1 class="text-center">Remove Employees</h1>
+
+        <!-- Search Bar -->
+        <div class="search-bar">
+            <input type="text" class="form-control" id="search-input" placeholder="Search by Username or Email">
+        </div>
+
+        <!-- Employee List Table -->
+        <form action="{{ url_for('remove_employee') }}" method="POST" id="employee-form">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered employee-table fade-in">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Select</th>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Department</th>
+                            <th>Position</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employee-table-body">
+                        <!-- Loop through the employees and display them here -->
+                        {% for employee in employees %}
+                        <tr>
+                            <td><input type="checkbox" name="employee_ids" value="{{ employee.id }}"></td>
+                            <td>{{ employee.id }}</td>
+                            <td>{{ employee.user_name }}</td>
+                            <td>{{ employee.email }}</td>
+                            <td>{{ employee.department }}</td>
+                            <td>{{ employee.position }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- Remove Button -->
+            <button type="submit" class="btn btn-remove">Remove Selected Employees</button>
+        </form>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Search functionality to filter employees
+        const searchInput = document.getElementById('search-input');
+        const employeeTableBody = document.getElementById('employee-table-body');
+
+        searchInput.addEventListener('keyup', function () {
+            const filter = searchInput.value.toLowerCase();
+            const rows = employeeTableBody.getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const username = rows[i].getElementsByTagName('td')[2].textContent.toLowerCase();
+                const email = rows[i].getElementsByTagName('td')[3].textContent.toLowerCase();
+
+                if (username.indexOf(filter) > -1 || email.indexOf(filter) > -1) {
+                    rows[i].style.display = "";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
