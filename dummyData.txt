@@ -1,0 +1,77 @@
+
+INSERT INTO public."user" (id, user_name, email, password, role, department, position, profile_picture)
+VALUES 
+(29, 'emp1', 'emp6@gmail.com', 'scrypt:32768:8:1$ORRuzFAPJpf267Rv$b80074a99b21d4e18243f583d1e9d49a1cc8d5bae72a2b7874f168277aecc8b492d0cf7338f37c9e7919b184fdf0cff45f58053a2d508a02da9cf3732eee1db1', 'employee', 'development', 'intern', 'binary data'),
+(30, 'emp2', 'emp2@gmail.com', 'scrypt:32768:8:1$aQrj9HdS$4c7a182f0b50a22c1834f58d3f8f49ac53f90d412e9cf5fa2e5cfb73b2a73f828b9b1260ab5f61b9f3948054e9391762dff06b634732ae1bd540781e2d66c377', 'employee', 'QA', 'SDE 1', 'binary data'),
+(31, 'emp3', 'emp3@gmail.com', 'scrypt:32768:8:1$rRfKL6Zs$da578c8aabf57a19d7c4e1e3e1f495bb4a648ab850a4e91771e4d0a3bb573881826fb5021b7a2a4fe9e873f9b678c8eec392da57eb134bbc5df46f748a4422f0', 'employee', 'devOps', 'SDE 2', 'binary data'),
+(32, 'emp4', 'emp4@gmail.com', 'scrypt:32768:8:1$gfP90NdH$cd73c4e23d54f5b75f90a142c6e829bc624a0b8421d4c65aa8d1eb60d3f5d05c4d2e07b859dd983ff71df80f4e20973f392e4d84368e8126d0338be9eb423ed5', 'employee', 'HR', 'Senior', 'binary data'),
+(33, 'emp5', 'emp5@gmail.com', 'scrypt:32768:8:1$QdU16cLb$8d54f5a20b47e29d7c28b19efbd9f70d62495a2f9b529cf41b27a01ad94d15ac521f92548f4d73fba9c45d8b7e67c6aebfa27d8145d93da828cfa1bdfc5e9259', 'employee', 'development', 'Principal', 'binary data');
+
+
+-- INSERT INTO login_log (id, user_id, login_time, logout_time, total_working_hours, status)
+-- VALUES
+-- (29, 29, '2024-10-21 11:47:35.139769', '2024-10-21 11:53:33.317591', 360, 'inactive'),
+-- (30, 30, '2024-10-21 10:05:15.124515', '2024-10-21 10:55:15.314875', 300, 'inactive'),
+-- (31, 31, '2024-10-21 09:30:10.457512', '2024-10-21 10:10:55.783428', 240, 'inactive'),
+-- (32, 32, '2024-10-21 08:47:05.564125', '2024-10-21 09:50:15.458547', 380, 'inactive'),
+-- (33, 33, '2024-10-21 11:01:30.789865', '2024-10-21 11:50:44.512341', 300, 'inactive');
+
+-- INSERT INTO meeting_log (id, employee_id, meeting_start_time, meeting_end_time, meeting_with, meeting_desc, per_meeting_hours, is_active)
+-- VALUES
+-- (29, 29, '2024-10-21 11:51:56.691619', '2024-10-21 11:52:41.110447', 'xyz', 'Making Routes', 44.418828, false),
+-- (30, 30, '2024-10-21 10:30:00.456789', '2024-10-21 10:50:00.457122', 'abc', 'Team Sync', 20.0, false),
+-- (31, 31, '2024-10-21 09:40:00.124415', '2024-10-21 10:00:00.455567', 'pqr', 'Deployment Discussion', 20.0, false),
+-- (32, 32, '2024-10-21 09:20:00.324518', '2024-10-21 09:50:00.665748', 'lmn', 'Hiring Strategy', 30.0, false),
+-- (33, 33, '2024-10-21 11:20:00.345612', '2024-10-21 11:40:00.987122', 'stu', 'Project Discussion', 20.0, false);
+
+-- INSERT INTO break_log (id, employee_id, start_time, end_time, break_time, break_category)
+-- VALUES
+-- (29, 29, '2024-10-21 11:48:35.12003', '2024-10-21 11:48:51.817949', 16.697919, 'Low'),
+-- (30, 30, '2024-10-21 10:20:00.455123', '2024-10-21 10:20:45.987123', 45.532000, 'High'),
+-- (31, 31, '2024-10-21 09:55:00.561232', '2024-10-21 09:55:30.984321', 30.423089, 'Low'),
+-- (32, 32, '2024-10-21 09:35:15.569876', '2024-10-21 09:36:20.563214', 65.993338, 'Extreme'),
+-- (33, 33, '2024-10-21 11:35:00.124569', '2024-10-21 11:35:45.587921', 45.463352, 'High');
+
+-- INSERT INTO mobile_log (id, employee_id, start_time, end_time, mobile_usage_time, mobile_usage_category)
+-- VALUES
+-- (29, 29, '2024-10-21 11:50:42', '2024-10-21 11:51:26', 14, 'Low'),
+-- (30, 30, '2024-10-21 10:15:00', '2024-10-21 10:35:00', 25, 'Medium'),
+-- (31, 31, '2024-10-21 09:45:00', '2024-10-21 10:00:00', 75, 'High'),
+-- (32, 32, '2024-10-21 09:30:00', '2024-10-21 09:50:00', 120, 'High'),
+-- (33, 33, '2024-10-21 11:30:00', '2024-10-21 11:50:00', 120, 'High');
+
+-- INSERT INTO recording_log (id, employee_id, start_recording_time, end_recording_time, total_capture_time, is_active)
+-- VALUES
+-- (29, 29, '2024-10-21 11:47:00.139769', '2024-10-21 11:52:00.317591', 300, false),
+-- (30, 30, '2024-10-21 10:05:00.124515', '2024-10-21 10:55:00.314875', 3000, false),
+-- (31, 31, '2024-10-21 09:30:00.457512', '2024-10-21 10:10:00.783428', 2400, false),
+-- (32, 32, '2024-10-21 08:47:00.564125', '2024-10-21 09:50:00.458547', 3800, false),
+-- (33, 33, '2024-10-21 11:01:00.789865', '2024-10-21 11:50:00.512341', 2940, false);
+
+INSERT INTO employee_tracking 
+(id, employee_id, name, department, position, login_time, logout_time, 
+total_working_hours, total_recording_time, total_break_time, no_of_breaks, 
+total_mobile_usage_time, no_of_mobile_used, total_meeting_time, no_of_meetings, 
+lunch_duration, total_present_time, productivity_score)
+VALUES
+(29, 29, 'John Doe', 'development', 'SDE 1', '2024-10-21 09:00:00', '2024-10-21 17:00:00', 
+360, 300, 16.7, 3, 44, 1, 44.42, 2, 42.90, 300, 0.85),
+
+(30, 30, 'Jane Smith', 'QA', 'SDE 2', '2024-10-21 09:30:00', '2024-10-21 17:30:00', 
+300, 300, 45.53, 4, 120, 2, 20.0, 1, 45.0, 240, 0.70),
+
+(31, 31, 'Sam Taylor', 'DevOps', 'Senior', '2024-10-21 09:45:00', '2024-10-21 18:15:00', 
+240, 220, 30.42, 2, 75, 1, 20.0, 1, 30.0, 200, 0.66),
+
+(32, 32, 'Alice Brown', 'development', 'Intern', '2024-10-21 10:00:00', '2024-10-21 19:00:00', 
+380, 300, 65.99, 5, 120, 2, 30.0, 1, 35.0, 300, 0.80),
+
+(33, 33, 'Mark Green', 'HR', 'Principal', '2024-10-21 08:30:00', '2024-10-21 16:30:00', 
+300, 240, 45.46, 3, 120, 2, 20.0, 1, 35.0, 250, 0.75);
+
+
+
+
+
+
+
