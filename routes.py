@@ -2,8 +2,9 @@ import base64
 import platform
 import subprocess
 import traceback
-from flask import flash, request, render_template, session, redirect, url_for, jsonify
+from flask import flash, json, request, render_template, session, redirect, url_for, jsonify
 import psutil
+from sqlalchemy import func
 from utilities import fetch_active_employees_count, fetch_departments_count, fetch_employees, log_employee_logout, log_start_recording, log_stop_recording, verify_password, fetch_user_by_email, hash_password, log_user_login, log_user_logout,register_employee
 from models import EmployeeTracking, User,db, LoginLog, MeetingLog, BreakLog, LunchBreakLog, RecordingLog
 from datetime import date, datetime
@@ -158,12 +159,27 @@ def init_routes(app):
         active_employees = fetch_active_employees_count()
         inactive_employees = total_employees - active_employees
 
-        departmentLabels = []
-        productivityHours = []
+
+    # Fetch unique departments from the User table
+        departments = db.session.query(User.department).distinct().all()
+        department_labels = [dept[0] for dept in departments]  # Extract department names
+
+        working_hours_by_dept = db.session.query(
+            EmployeeTracking.department,
+            func.sum(EmployeeTracking.total_working_hours)
+        ).group_by(EmployeeTracking.department).all()
+
+
+        def convert_to_list(data):
+            return [(row[0], row[1]) for row in data]
+
+        working_hours_by_dept = convert_to_list(working_hours_by_dept)
+
         if 'admin_id' in session:
             return render_template('admin_dashboard.html', employees=employees, total_employees=total_employees,
-                               total_departments=total_departments, active_employees=active_employees,
-                               inactive_employees=inactive_employees)
+                                total_departments=total_departments, active_employees=active_employees,
+                                inactive_employees=inactive_employees,
+                                working_hours=working_hours_by_dept)
         else:
             return render_template('not_logged.html')
     
@@ -492,11 +508,63 @@ def init_routes(app):
                 flash(f'Successfully removed {len(employees_to_remove)} employees.', 'success')
             else:
                 flash('No employees selected for removal.', 'danger')
-
             return redirect(url_for('remove_employee'))
         if request.method == 'GET':
-        # On GET request, fetch all employees to display
-            employees = User.query.all()
+            # Exclude the current logged in user (admin)
+            current_user_id = session.get('admin_id')
+            employees = User.query.filter(User.id != current_user_id).all()
             return render_template('remove_employee.html', employees=employees)
 
 
+    @app.route('/analysis')
+    def analysis():
+        # Fetching working hours, recording time, mobile usage, and meeting time by department
+        working_hours_by_dept = db.session.query(
+            EmployeeTracking.department,
+            func.sum(EmployeeTracking.total_working_hours)
+        ).group_by(EmployeeTracking.department).all()
+
+        recording_time_by_dept = db.session.query(
+            EmployeeTracking.department,
+            func.sum(EmployeeTracking.total_recording_time)
+        ).group_by(EmployeeTracking.department).all()
+
+        mobile_usage_by_dept = db.session.query(
+            EmployeeTracking.department,
+            func.sum(EmployeeTracking.total_mobile_usage_time)
+        ).group_by(EmployeeTracking.department).all()
+
+        meeting_time_by_dept = db.session.query(
+            EmployeeTracking.department,
+            func.sum(EmployeeTracking.total_meeting_time)
+        ).group_by(EmployeeTracking.department).all()
+
+        absent_time_by_dept = db.session.query(
+            EmployeeTracking.department,
+            func.sum(EmployeeTracking.total_break_time)
+        ).group_by(EmployeeTracking.department).all()
+
+        def convert_to_list(data):
+            return [(row[0], row[1]) for row in data]
+
+        working_hours_by_dept = convert_to_list(working_hours_by_dept)
+        recording_time_by_dept = convert_to_list(recording_time_by_dept)
+        mobile_usage_by_dept = convert_to_list(mobile_usage_by_dept)
+        meeting_time_by_dept = convert_to_list(meeting_time_by_dept)
+        absent_time_by_dept = convert_to_list(absent_time_by_dept)
+
+        print(working_hours_by_dept)
+        print(recording_time_by_dept)
+        print(mobile_usage_by_dept)
+        print(meeting_time_by_dept)
+        print(absent_time_by_dept)
+
+        # Pass each dataset individually to the template
+        return render_template(
+            'analysis.html',
+            working_hours=working_hours_by_dept,
+            recording_time=recording_time_by_dept,
+            mobile_usage=mobile_usage_by_dept,
+            meeting_time=meeting_time_by_dept,
+            absent_time=absent_time_by_dept
+        )

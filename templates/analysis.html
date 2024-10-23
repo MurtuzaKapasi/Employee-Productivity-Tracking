@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Productivity Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;  /* Light background for the page */
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .chart-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin-bottom: 40px;
+        }
+
+        .chart-box {
+            width: 45%;
+            margin-bottom: 40px;
+            background-color: #fff;  /* Card background */
+            border-radius: 8px;  /* Rounded corners for the card */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);  /* Shadow effect for the card */
+            padding: 20px;  /* Padding inside the card */
+        }
+
+        .chart-title {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 300px !important;
+        }
+    </style>
+</head>
+<body>
+    <h1>Employee Productivity Analysis</h1>
+
+    <!-- First row of charts -->
+    <div class="chart-container">
+        <div class="chart-box">
+            <div class="chart-title">Working Hours by Department</div>
+            <canvas id="workingHoursChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+            <div class="chart-title">Recording Time by Department</div>
+            <canvas id="recordingTimeChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+            <div class="chart-title">Mobile Usage Time by Department</div>
+            <canvas id="mobileUsageChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Second row of charts -->
+    <div class="chart-container">
+        <div class="chart-box">
+            <div class="chart-title">Meeting Time by Department</div>
+            <canvas id="meetingTimeChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+            <div class="chart-title">Absent Time by Department</div>
+            <canvas id="absentTimeChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+       
+        const workingHours = JSON.parse('{{ working_hours | tojson | safe }}');
+        const recordingTime = JSON.parse('{{ recording_time | tojson | safe }}');
+        const mobileUsage = JSON.parse('{{ mobile_usage | tojson | safe }}');
+        const meetingTime = JSON.parse('{{ meeting_time | tojson | safe }}');
+        const absentTime = JSON.parse('{{ absent_time | tojson | safe }}');
+
+        // Extracting department labels and data for each chart
+        const departmentLabels = workingHours.map(item => item[0]);  // Get department names
+        const workingHoursData = workingHours.map(item => item[1]);  // Get working hours
+        const recordingTimeData = recordingTime.map(item => item[1]);  // Get recording time
+        const mobileUsageData = mobileUsage.map(item => item[1]);  // Get mobile usage time
+        const meetingTimeData = meetingTime.map(item => item[1]);  // Get meeting time
+        const absentTimeData = absentTime.map(item => item[1]);  // Get absent time
+
+        // Function to create a chart
+        function createChart(chartId, label, data, backgroundColor, borderColor) {
+            const ctx = document.getElementById(chartId).getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: departmentLabels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        backgroundColor: backgroundColor,
+                        borderColor: borderColor,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Creating individual charts
+        createChart('workingHoursChart', 'Working Hours', workingHoursData, 'rgba(64, 224, 208, 0.4)', 'rgba(64, 224, 208, 1)'); // Teal
+        createChart('recordingTimeChart', 'Recording Time', recordingTimeData, 'rgba(148, 0, 211, 0.4)', 'rgba(148, 0, 211, 1)'); // Purple
+        createChart('mobileUsageChart', 'Mobile Usage Time', mobileUsageData, 'rgba(255, 165, 0, 0.4)', 'rgba(255, 165, 0, 1)'); // Orange
+        createChart('meetingTimeChart', 'Meeting Time', meetingTimeData, 'rgba(255, 215, 0, 0.4)', 'rgba(255, 215, 0, 1)'); // Yellow
+        createChart('absentTimeChart', 'Absent Time', absentTimeData, 'rgba(105, 105, 105, 0.4)', 'rgba(105, 105, 105, 1)'); // Dark Gray
+
+    </script>
+</body>
+</html>

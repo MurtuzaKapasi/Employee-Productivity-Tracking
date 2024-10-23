@@ -26,6 +26,33 @@
             font-size: 1.2em;
             animation: fadeIn 2s ease;
         }
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 40px;
+            
+        }
+        .chart-box {
+            width: 60%;
+            margin-bottom: 40px;
+            background-color: #fff;  /* Card background */
+            border-radius: 8px;  /* Rounded corners for the card */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);  /* Shadow effect for the card */
+            padding: 20px;  /* Padding inside the card */
+        }
+
+        .chart-title {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 300px !important;
+        }
 
     </style>
     <!-- Sidebar Navigation -->
@@ -36,6 +63,8 @@
             <li><a href="/register-employee">Add Employee</a></li>
             <li><a href="/remove-employee">Remove Employee</a></li>
             <li><a href="/employee_list">Employee List</a></li>
+            <li><a href="/analysis">Analysis</a></li>
+        </ul>
         </ul>
     </nav>
 
@@ -74,40 +103,53 @@
         </section>
 
         <!-- Graphical Representation of Statistics -->
-        <section class="graph-container">
-            <h2>Productivity Trends (Department-wise)</h2>
-            <canvas id="productivityChart"></canvas>
-        </section>
-
-       
+        <div class="chart-container">
+            <h2>Working Hours by Department</h2>
+        <div class="chart-box">
+            <div class="chart-title"></div>
+            <canvas id="workingHoursChart"></canvas>
+        </div>
+       </div>
     </div>
 
     <!-- JavaScript for Chart.js to create department-wise productivity trends -->
     <script>
-        // Replace hardcoded values with dynamic data from the Flask backend
+       
+        const workingHours = JSON.parse('{{ working_hours | tojson | safe }}');
+        // Extracting department labels and data for each chart
+        const departmentLabels = workingHours.map(item => item[0]);  // Get department names
+        const workingHoursData = workingHours.map(item => item[1]);  // Get working hours
 
-        const ctx = document.getElementById('productivityChart').getContext('2d');
-        const productivityChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ["Development", "QA", "Devops", "HR"], 
-                // labels : departmentLabels,
-                datasets: [{
-                    label: 'Productivity Hours',
-                    data: [12, 19, 3, 5], // Example data
-                    backgroundColor: ['rgba(75, 192, 192, 0.2)'],
-                    borderColor: ['rgba(75, 192, 192, 1)'],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
+        // Function to create a chart
+        function createChart(chartId, label, data, backgroundColor, borderColor) {
+            const ctx = document.getElementById(chartId).getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: departmentLabels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        backgroundColor: backgroundColor,
+                        borderColor: borderColor,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
+
+        // Creating individual charts
+        createChart('workingHoursChart', 'Working Hours', workingHoursData, 'rgba(64, 224, 208, 0.4)', 'rgba(64, 224, 208, 1)'); // Teal
+
     </script>
+    
+    
 </body>
 </html>
